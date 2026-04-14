@@ -1,6 +1,6 @@
 # Blockchain Dashboard Frontend
 
-루트에 독립된 React 프론트 앱입니다.
+React 기반 블록체인 대시보드 프론트엔드입니다.
 
 ## 실행
 
@@ -9,14 +9,13 @@ npm install
 npm run dev
 ```
 
-## API 연결 방식
+## API 연결
 
-- 기본값은 `mock` 데이터로 동작합니다.
-- 실제 스프링 백엔드(`final-project`)와 연결하려면 `.env`를 만들고 아래처럼 설정합니다.
+- 기본적으로 Vite 프록시를 통해 `/api` 요청을 `http://localhost:8090`으로 전달합니다.
+- 다른 백엔드 주소를 직접 사용하려면 `.env` 파일을 만들고 아래처럼 설정합니다.
 
 ```env
-VITE_USE_MOCK_DATA=false
-VITE_API_BASE_URL=http://localhost:8080
+VITE_API_BASE_URL=http://localhost:8090
 ```
 
 ## 현재 구현 페이지

@@ -2,7 +2,7 @@
 import { Link, useParams } from "react-router-dom";
 import Pagination from "../components/Pagination";
 import TransactionTable from "../components/TransactionTable";
-import { getWalletDetail } from "../data/blockchainApi";
+import { getWalletDetail } from "../api/blockchainApi";
 
 function getOwnerBadgeClass(ownerType) {
   switch (ownerType) {
@@ -100,7 +100,7 @@ function WalletDetailPage() {
           </p>
         </div>
 
-        <Link to="/" className="ghost-button">
+        <Link to="/blockchain" className="ghost-button">
           목록으로
         </Link>
       </div>

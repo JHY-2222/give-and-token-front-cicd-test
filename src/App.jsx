@@ -1,9 +1,9 @@
 ﻿import { useEffect, useState } from "react";
 import { NavLink, Route, Routes, useLocation } from "react-router-dom";
-import DonationReturnPage from "./pages/DonationReturnPage";
-import TransactionDashboardPage from "./pages/TransactionDashboardPage";
-import WalletDetailPage from "./pages/WalletDetailPage";
-import TransactionDetailPage from "./pages/TransactionDetailPage";
+import DonationApp from "./features/donation/DonationApp";
+import TransactionDashboardPage from "./features/blockchain/pages/TransactionDashboardPage";
+import WalletDetailPage from "./features/blockchain/pages/WalletDetailPage";
+import TransactionDetailPage from "./features/blockchain/pages/TransactionDetailPage";
 
 function ThemeToggleIcon({ theme }) {
   if (theme === "dark") {
@@ -40,13 +40,13 @@ function DashboardLayout({ theme, onToggleTheme }) {
     <div className="app-shell">
       <aside className="sidebar sidebar--thin">
         <nav className="sidebar__icon-nav" aria-label="주요 이동">
-          <NavLink to="/" end className="sidebar__icon-link" aria-label="홈">
+          <NavLink to="/blockchain" end className="sidebar__icon-link" aria-label="블록체인 대시보드">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="M3 11.5 12 4l9 7.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
               <path d="M6.5 10.5V20h11v-9.5" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           </NavLink>
-          <NavLink to="/donation-return" className="sidebar__icon-link" aria-label="기부페이지로 돌아가기">
+          <NavLink to="/" className="sidebar__icon-link" aria-label="기부 메인으로 이동">
             <svg viewBox="0 0 24 24" aria-hidden="true">
               <path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9Z" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
@@ -65,7 +65,9 @@ function DashboardLayout({ theme, onToggleTheme }) {
 
       <main className="content">
         <Routes>
-          <Route path="/" element={<TransactionDashboardPage />} />
+          <Route path="/blockchain" element={<TransactionDashboardPage />} />
+          <Route path="/blockchain/wallets/:walletAddress" element={<WalletDetailPage />} />
+          <Route path="/blockchain/transactions/:txHash" element={<TransactionDetailPage />} />
           <Route path="/wallets/:walletAddress" element={<WalletDetailPage />} />
           <Route path="/transactions/:txHash" element={<TransactionDetailPage />} />
         </Routes>
@@ -90,11 +92,17 @@ function App() {
     setTheme((currentTheme) => (currentTheme === "dark" ? "light" : "dark"));
   };
 
-  if (location.pathname === "/donation-return") {
-    return <DonationReturnPage />;
+  const isBlockchainRoute =
+    location.pathname === "/blockchain" ||
+    location.pathname.startsWith("/blockchain/") ||
+    location.pathname.startsWith("/wallets/") ||
+    location.pathname.startsWith("/transactions/");
+
+  if (isBlockchainRoute) {
+    return <DashboardLayout theme={theme} onToggleTheme={handleToggleTheme} />;
   }
 
-  return <DashboardLayout theme={theme} onToggleTheme={handleToggleTheme} />;
+  return <DonationApp />;
 }
 
 export default App;

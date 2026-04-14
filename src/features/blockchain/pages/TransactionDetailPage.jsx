@@ -1,6 +1,18 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getTransactionDetail } from "../data/blockchainApi";
+import { getTransactionDetail } from "../api/blockchainApi";
+
+function formatDateTime(value) {
+  const date = new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  const hours = String(date.getHours()).padStart(2, "0");
+  const minutes = String(date.getMinutes()).padStart(2, "0");
+  const seconds = String(date.getSeconds()).padStart(2, "0");
+
+  return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
+}
 
 function getEventBadgeClass(eventType) {
   switch (eventType) {
@@ -107,7 +119,7 @@ function TransactionDetailPage() {
           <p className="hero__text">트랜잭션 해시와 전송 정보를 확인할 수 있습니다.</p>
         </div>
 
-        <Link to="/" className="ghost-button">
+        <Link to="/blockchain" className="ghost-button">
           목록으로
         </Link>
       </div>
@@ -126,10 +138,7 @@ function TransactionDetailPage() {
               <DetailCell label="금액" value={`${data.amount.toLocaleString()} GT`} />
               <DetailCell label="가스비" value={`${data.gasFee} ETH`} />
               <DetailCell label="블록 번호" value={String(data.blockNum)} />
-              <DetailCell
-                label="전송 시각"
-                value={new Date(data.sentAt).toLocaleString("ko-KR")}
-              />
+              <DetailCell label="전송 시각" value={formatDateTime(data.sentAt)} />
             </tbody>
           </table>
         </div>
@@ -148,12 +157,12 @@ function TransactionDetailPage() {
               <DetailCell
                 label="보낸 지갑"
                 value={data.fromWalletAddress}
-                linkTo={`/wallets/${data.fromWalletAddress}`}
+                linkTo={`/blockchain/wallets/${data.fromWalletAddress}`}
               />
               <DetailCell
                 label="받는 지갑"
                 value={data.toWalletAddress}
-                linkTo={`/wallets/${data.toWalletAddress}`}
+                linkTo={`/blockchain/wallets/${data.toWalletAddress}`}
               />
             </tbody>
           </table>

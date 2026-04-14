@@ -1,11 +1,23 @@
 function Pagination({ pageInfo, onPageChange }) {
   const { page, totalPages } = pageInfo;
+  const MAX_VISIBLE_PAGES = 10;
 
   if (totalPages <= 1) {
     return null;
   }
 
-  const pages = Array.from({ length: totalPages }, (_, index) => index + 1);
+  let startPage = Math.max(1, page - Math.floor(MAX_VISIBLE_PAGES / 2));
+  let endPage = startPage + MAX_VISIBLE_PAGES - 1;
+
+  if (endPage > totalPages) {
+    endPage = totalPages;
+    startPage = Math.max(1, endPage - MAX_VISIBLE_PAGES + 1);
+  }
+
+  const pages = Array.from(
+    { length: endPage - startPage + 1 },
+    (_, index) => startPage + index
+  );
 
   return (
     <div className="pagination">
