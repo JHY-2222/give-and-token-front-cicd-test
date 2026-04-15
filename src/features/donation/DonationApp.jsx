@@ -17,6 +17,8 @@ import NotFoundPage from "./pages/NotFoundPage";
 import OrganizationApplyPage from "./pages/OrganizationApplyPage";
 import TransparencyPage from "./pages/TransparencyPage";
 import ScrollToTop from "./components/ScrollToTop";
+import FoundationRegisterPage from "../foundation/pages/FoundationRegisterPage";
+
 
 function HomePage() {
   return (
@@ -88,6 +90,7 @@ export default function DonationApp() {
           <Route path="/privacy" element={<LegalPage />} />
           <Route path="/policy" element={<LegalPage />} />
           <Route path="*" element={<NotFoundPage />} />
+          <Route path="/foundation/register" element={<FoundationRegisterPage />} />
         </Routes>
       </main>
       <Footer />
