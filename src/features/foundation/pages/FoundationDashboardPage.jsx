@@ -28,7 +28,7 @@ import {
   updateFoundationMyInfo,
 } from "../api/foundationApi";
 
-const BRAND_COLOR = "#FFF200";
+const BRAND_COLOR = "#FF8A65";
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(/\/$/, "");
 
 function formatWon(value) {
@@ -373,12 +373,24 @@ function FoundationDashboardPage() {
   }, [foundation?.foundationNo]);
 
   const summary = useMemo(
-    () => ({
-      foundationName: foundation?.foundationName || "단체명",
-      activeCount: stats?.activeCampaignCount ?? 0,
-      monthlyAmount: stats?.thisMonthDonationAmount ?? 0,
-    }),
-    [foundation, stats],
+    () => {
+      const activeCampaignsFromList = campaigns.filter((campaign) =>
+        isMatchCampaignFilter(campaign, "active"),
+      ).length;
+      const statsActiveCount = Number(stats?.activeCampaignCount ?? 0);
+      const monthlyAmount =
+        stats?.thisMonthDonationAmount ??
+        stats?.monthlyDonationAmount ??
+        stats?.thisMonthAmount ??
+        0;
+
+      return {
+        foundationName: foundation?.foundationName || "단체명",
+        activeCount: Math.max(statsActiveCount, activeCampaignsFromList),
+        monthlyAmount,
+      };
+    },
+    [campaigns, foundation, stats],
   );
 
   const recentCampaigns = useMemo(() => campaigns.slice(0, 2), [campaigns]);
@@ -689,7 +701,7 @@ function FoundationDashboardPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#f2f4f7] p-8 text-sm text-slate-600">
+      <main className="min-h-screen bg-surface p-8 pt-28 text-sm text-ink">
         불러오는 중...
       </main>
     );
@@ -697,8 +709,8 @@ function FoundationDashboardPage() {
 
   if (errorMessage) {
     return (
-      <main className="min-h-screen bg-[#f2f4f7] p-8">
-        <div className="mx-auto max-w-4xl rounded-3xl border border-rose-200 bg-white p-6">
+      <main className="min-h-screen bg-surface p-8 pt-28">
+        <div className="storybook-card mx-auto max-w-4xl p-6">
           <p className="text-sm text-rose-600">{errorMessage}</p>
           <button
             type="button"
@@ -713,10 +725,10 @@ function FoundationDashboardPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f7f5f2] text-slate-900">
-      <div className="mx-auto grid max-w-[1320px] grid-cols-1 gap-6 px-4 py-4 lg:grid-cols-[160px_1fr]">
-        <aside className="rounded-[28px] bg-white p-4">
-          <div className="mb-8 flex items-center gap-2 text-sm font-bold">
+    <main className="min-h-screen bg-surface pt-28 text-ink watercolor-bg">
+      <div className="mx-auto grid max-w-[1320px] grid-cols-1 gap-6 px-4 py-4 lg:grid-cols-[220px_1fr]">
+        <aside className="storybook-card p-4 lg:mt-[96px]">
+          <div className="mb-6 text-3xl font-black leading-tight text-ink">
             기부엔토큰
           </div>
 
@@ -778,19 +790,29 @@ function FoundationDashboardPage() {
               </span>
             </button>
           </nav>
+          <a
+            href="http://localhost:5173/"
+            className="mt-2 flex w-full rounded-2xl px-3 py-2 text-left text-sm text-slate-500 hover:bg-slate-50"
+          >
+            <span className="flex items-center gap-2 leading-tight">
+              <House size={14} className="shrink-0" />
+              <span>기부엔토큰<br />바로가기</span>
+            </span>
+          </a>
         </aside>
 
         <section className="space-y-4">
-          <header className="flex items-center justify-between rounded-[28px] bg-white px-6 py-4">
-            <h1 className="text-lg font-bold">기부단체 마이페이지</h1>
+          <header className="flex items-center justify-between px-2 py-4">
+            <h1 className="text-5xl font-black leading-tight text-ink">
+              기부단체 마이페이지
+            </h1>
           </header>
 
           {activeMenu === "home" ? (
             <>
               <div className="grid gap-5 xl:grid-cols-[360px_1fr]">
                 <article
-                  className="rounded-[28px] p-6 text-slate-900 shadow-xl"
-                  style={{ background: "linear-gradient(135deg, #eef8a3 0%, #E0F218 100%)" }}
+                  className="rounded-[2rem] bg-primary p-6 text-white shadow-xl shadow-primary/20"
                 >
                   <p className="text-xs text-slate-700">반갑습니다</p>
                   <h2 className="mt-2 text-2xl font-bold leading-tight">
@@ -813,22 +835,22 @@ function FoundationDashboardPage() {
                   </div>
                 </article>
 
-                <article className="rounded-[28px] bg-white p-5">
+                <article className="storybook-card p-5">
                   <div className="mb-4 flex items-center justify-between">
-                    <h3 className="text-sm font-bold text-slate-700">
+                    <h3 className="text-sm font-bold text-ink">
                       최근 신청 현황
                     </h3>
                     <button
                       type="button"
                       className="text-xs font-semibold text-slate-700"
-                      style={{ color: "#7c8600" }}
+                      style={{ color: BRAND_COLOR }}
                       onClick={() => handleOpenMenu("campaign")}
                     >
                       전체보기
                     </button>
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid gap-4">
                     {recentCampaigns.length === 0 ? (
                       <div className="rounded-2xl border border-dashed border-slate-200 p-4 text-sm text-slate-500">
                         최근 신청한 캠페인이 없습니다.
@@ -898,7 +920,7 @@ function FoundationDashboardPage() {
           ) : null}
 
           {activeMenu === "campaign" ? (
-            <section className="rounded-[28px] bg-white p-6">
+            <section className="storybook-card p-6">
               {selectedCampaignNo ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -1167,7 +1189,7 @@ function FoundationDashboardPage() {
           ) : null}
 
           {activeMenu === "settlement" ? (
-            <section className="rounded-[28px] bg-white p-6">
+            <section className="storybook-card p-6">
               <div className="mb-5 flex items-center justify-between">
                 <div>
                   <h2 className="text-xl font-bold">정산 관리</h2>

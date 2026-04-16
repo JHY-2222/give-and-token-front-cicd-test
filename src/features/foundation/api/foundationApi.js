@@ -376,6 +376,11 @@ function buildCampaignMultipartData(formValues) {
         planAmount: Number(plan.planAmount),
       }))
       .filter((plan) => plan.planContent && !Number.isNaN(plan.planAmount)),
+    deletedDetailImageNos: Array.isArray(formValues.deletedDetailImageNos)
+      ? formValues.deletedDetailImageNos
+          .map((imageNo) => Number(imageNo))
+          .filter((imageNo) => Number.isFinite(imageNo) && imageNo > 0)
+      : [],
   };
 
   multipartData.append(
