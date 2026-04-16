@@ -1,4 +1,4 @@
-﻿import React, { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import LoginRoleSelector from "../components/LoginRoleSelector";
 import LoginForm from "../components/LoginForm";
@@ -61,16 +61,19 @@ const LoginPage = () => {
       const data = await response.json();
       console.log("로그인 성공:", data);
 
+      // 토큰 및 사용자 역할 저장
+      const rawToken = String(data?.accessToken || "")
+        .replace(/^Bearer\s+/i, "")
+        .trim();
+
+      if (rawToken) {
+        window.localStorage.setItem("accessToken", rawToken);
+      }
+      
+      window.localStorage.setItem("userRole", loginData.role);
+
       if (loginData.role === "foundation") {
-        const rawToken = String(data?.accessToken || "")
-          .replace(/^Bearer\s+/i, "")
-          .trim();
-
-        if (rawToken) {
-          window.localStorage.setItem("accessToken", rawToken);
-          window.localStorage.setItem("foundationAccessToken", rawToken);
-        }
-
+        window.localStorage.setItem("foundationAccessToken", rawToken);
         window.localStorage.setItem(
           "foundationAuthInfo",
           JSON.stringify({
@@ -80,13 +83,6 @@ const LoginPage = () => {
             tokenType: data?.tokenType ?? "Bearer",
           }),
         );
-      } else if (data?.accessToken) {
-        const rawToken = String(data.accessToken)
-          .replace(/^Bearer\s+/i, "")
-          .trim();
-        if (rawToken) {
-          window.localStorage.setItem("accessToken", rawToken);
-        }
       }
 
       redirectByRole(loginData.role);
