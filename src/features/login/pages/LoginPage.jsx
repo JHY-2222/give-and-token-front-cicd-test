@@ -23,7 +23,6 @@ const LoginPage = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-
     setLoginData((prev) => ({
       ...prev,
       [name]: value,
@@ -47,14 +46,11 @@ const LoginPage = () => {
 
   const handleLocalLogin = async (e) => {
     e.preventDefault();
-
     try {
       setLoginError("");
-
-      const response = await loginLocal({
+      const response = await loginLocal(loginData.role, {
         email: loginData.email,
         password: loginData.password,
-        userType: "LOCAL",
       });
 
       if (!response.ok) {
@@ -64,7 +60,6 @@ const LoginPage = () => {
 
       const data = await response.json();
       console.log("로그인 성공:", data);
-
       redirectByRole(loginData.role);
     } catch (error) {
       console.error("로그인 중 오류 발생:", error);
@@ -81,42 +76,47 @@ const LoginPage = () => {
   };
 
   return (
-    <div>
-      <h1>로그인</h1>
+    <div className="min-h-screen bg-surface flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-md w-full space-y-8 p-10 bg-white rounded-2xl shadow-lg text-ink">
+        <h1 className="text-center text-3xl font-display font-bold tracking-tight text-ink">
+          로그인
+        </h1>
 
-      <LoginRoleSelector
-        role={loginData.role}
-        onChange={handleChange}
-      />
+        <LoginRoleSelector role={loginData.role} onChange={handleChange} />
 
-      <LoginForm
-        loginData={loginData}
-        onChange={handleChange}
-        onSubmit={handleLocalLogin}
-        errorMessage={loginError}
-      />
-
-      <LoginLinks
-        onOpenFindEmail={() => setIsEmailFindOpen(true)}
-        onOpenPasswordReset={() => setIsPasswordResetOpen(true)}
-      />
-
-      <hr />
-
-      <SocialLoginSection
-        onGoToSignUp={goToSignUp}
-        onGoogleLogin={handleGoogleLogin}
-      />
-
-      {isEmailFindOpen && (
-        <EmailFindModal onClose={() => setIsEmailFindOpen(false)} />
-      )}
-
-      {isPasswordResetOpen && (
-        <PasswordResetModal
-          onClose={() => setIsPasswordResetOpen(false)}
+        <LoginForm
+          loginData={loginData}
+          onChange={handleChange}
+          onSubmit={handleLocalLogin}
+          errorMessage={loginError}
         />
-      )}
+
+        <LoginLinks
+          onOpenFindEmail={() => setIsEmailFindOpen(true)}
+          onOpenPasswordReset={() => setIsPasswordResetOpen(true)}
+        />
+
+        <div className="relative flex py-5 items-center">
+          <div className="flex-grow border-t border-gray-300"></div>
+          <span className="flex-shrink mx-4 text-gray-400 text-xs">
+            또는
+          </span>
+          <div className="flex-grow border-t border-gray-300"></div>
+        </div>
+
+        <SocialLoginSection
+          onGoToSignUp={goToSignUp}
+          onGoogleLogin={handleGoogleLogin}
+        />
+
+        {isEmailFindOpen && (
+          <EmailFindModal onClose={() => setIsEmailFindOpen(false)} />
+        )}
+
+        {isPasswordResetOpen && (
+          <PasswordResetModal onClose={() => setIsPasswordResetOpen(false)} />
+        )}
+      </div>
     </div>
   );
 };
