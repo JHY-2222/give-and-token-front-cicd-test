@@ -1,4 +1,4 @@
-import { Link, Navigate, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Heart } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -80,6 +80,9 @@ function HomePage() {
 }
 
 export default function DonationApp() {
+  const location = useLocation();
+  const isMyPageRoute = location.pathname.startsWith("/mypage");
+
   return (
     <div className="min-h-screen bg-surface selection:bg-primary selection:text-white">
       <ScrollToTop />
@@ -115,7 +118,7 @@ export default function DonationApp() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
-      <Footer />
+      {!isMyPageRoute && <Footer />}
     </div>
   );
 }

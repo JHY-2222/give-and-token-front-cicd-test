@@ -4,6 +4,7 @@ import ProfileCard from "../components/ProfileCardPage";
 import WalletCard from "../components/MyWalletCard";
 import DonationSummaryCard from "../components/MyDonationSummaryCard";
 import DonationHistorySection from "../components/DonationHistorySection";
+import "../styles/MyPage.css";
 import {
   getMyPageInfo,
   getTransactionHistory,
@@ -30,15 +31,14 @@ export default function MyPageMain() {
   useEffect(() => {
     // 1. 로그인 여부 즉시 확인
     if (!getIsLoggedIn()) {
-      alert("로그인이 필요한 페이지입니다.");
+      alert("로그아웃되었습니다. 다시 로그인해주세요.");
       navigate("/login", { replace: true });
       return;
     }
-    
+
     // 2. 데이터 불러오기
     fetchMyPageData();
   }, [navigate]);
-
   const fetchMyPageData = async () => {
     try {
       setLoading(true);
@@ -76,37 +76,55 @@ export default function MyPageMain() {
   }, [transactionList]);
 
   if (loading) {
-    return <div>로딩 중...</div>;
+    return <div className="min-h-screen flex items-center justify-center font-display text-xl text-ink">로딩 중...</div>;
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return <div className="min-h-screen flex items-center justify-center font-display text-xl text-ink">{error}</div>;
   }
 
   return (
     <div className="mypage-main-page">
-      <h1>마이페이지</h1>
+      <div className="flex flex-col lg:flex-row gap-16">
+        {/* 좌측 사이드바: 프로필 정보 */}
+        <aside className="w-full lg:w-80 shrink-0">
+          <div className="lg:sticky lg:top-48 h-full">
+            <ProfileCard
+              myInfo={myInfo}
+              onEditProfile={() => navigate("/mypage/profile")}
+              onChangePassword={() => navigate("/mypage/password")}
+              onViewDonations={() => navigate("/mypage/history")}
+            />
+          </div>
+        </aside>
 
-      <section className="mypage-main-top">
-        <ProfileCard
-          myInfo={myInfo}
-          onEditProfile={() => navigate("/mypage/profile/edit")}
-          onChangePassword={() => navigate("/mypage/password/change")}
-          onViewDonations={() => navigate("/mypage/donations")}
-        />
+        {/* 우측 메인 콘텐츠 영역 */}
+        <div className="flex-1 min-w-0 space-y-12">
+          {/* 제목: 대폭 강화 (4xl -> 5xl급) */}
+          <header className="mb-10">
+            <h1 className="text-5xl font-black text-slate-900 tracking-tight !mb-0 !text-left">마이페이지</h1>
+            <p className="text-slate-400 mt-4 text-lg font-medium">후원 활동과 자산 현황을 한 눈에 확인하세요.</p>
+          </header>
 
-        <div className="mypage-main-side">
-          <WalletCard walletInfo={walletInfo} />
-          <DonationSummaryCard summary={summary} />
+          {/* 1단: 지갑 정보 (상단 배치) */}
+          <div className="w-full">
+            <WalletCard walletInfo={walletInfo} />
+          </div>
+
+          {/* 2단: 요약(좌) & 기부내역(우) */}
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
+            <div className="xl:col-span-4 h-full">
+              <DonationSummaryCard summary={summary} />
+            </div>
+            <div className="xl:col-span-8 h-full">
+              <DonationHistorySection
+                donationHistory={transactionList}
+                onViewAll={() => navigate("/mypage/history")}
+              />
+            </div>
+          </div>
         </div>
-      </section>
-
-      <section className="mypage-main-bottom">
-        <DonationHistorySection
-          donationHistory={transactionList}
-          onViewAll={() => navigate("/mypage/donations")}
-        />
-      </section>
+      </div>
     </div>
   );
 }
