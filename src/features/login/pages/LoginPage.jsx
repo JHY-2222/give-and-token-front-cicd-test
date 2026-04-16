@@ -80,6 +80,7 @@ const LoginPage = () => {
       const data = await response.json().catch(()=>null);
       console.log("로그인 성공:", data);
       localStorage.setItem('accessToken',data.accessToken);
+      localStorage.setItem('userRole', loginData.role);
       redirectByRole(loginData.role);
     } catch (error) {
       console.error("로그인 중 오류 발생:", error);

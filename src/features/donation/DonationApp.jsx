@@ -29,6 +29,8 @@ import FoundationDetailPage from "../foundation/pages/FoundationDetailPage";
 import FoundationListPage from "../foundation/pages/FoundationListPage";
 import FoundationSignupPage from "../foundation/pages/FoundationSignupPage";
 import FoundationSignupCompletePage from "../foundation/pages/FoundationSignupCompletePage";
+import BeneficiaryMainPage from "../beneficiary/pages/BeneficiaryMainPage";
+import FoundationDashboardPage from "../foundation/pages/FoundationDashboardPage";
 
 function HomePage() {
   return (
@@ -112,6 +114,8 @@ export default function DonationApp() {
           <Route path="/test/campaign" element={<TestCampaignPage />} />
           <Route path="/foundation/:foundationNo" element={<FoundationDetailPage />} />
           <Route path="/foundation/:foundationNo/campaigns" element={<FoundationListPage />} />
+          <Route path="/foundation/dashboard" element={<FoundationDashboardPage />} />
+          <Route path="/beneficiary/main" element={<BeneficiaryMainPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
