@@ -11,6 +11,13 @@ import { loginLocal } from "../api/authApi";
 const LoginPage = () => {
   const navigate = useNavigate();
 
+  // 소셜 로그인 리다이렉트 처리: /login/google 경로로 들어오면 메인으로 이동
+  React.useEffect(() => {
+    if (window.location.pathname === "/login/google") {
+      navigate("/", { replace: true });
+    }
+  }, [navigate]);
+
   const [loginData, setLoginData] = useState({
     role: "user",
     email: "",
@@ -96,18 +103,23 @@ const LoginPage = () => {
           onOpenPasswordReset={() => setIsPasswordResetOpen(true)}
         />
 
-        <div className="relative flex py-5 items-center">
-          <div className="flex-grow border-t border-gray-300"></div>
-          <span className="flex-shrink mx-4 text-gray-400 text-xs">
-            또는
-          </span>
-          <div className="flex-grow border-t border-gray-300"></div>
-        </div>
+        {/* 일반 유저(user)인 경우에만 소셜 로그인 섹션 노출 */}
+        {loginData.role === "user" && (
+          <>
+            <div className="relative flex py-5 items-center">
+              <div className="flex-grow border-t border-gray-300"></div>
+              <span className="flex-shrink mx-4 text-gray-400 text-xs">
+                또는
+              </span>
+              <div className="flex-grow border-t border-gray-300"></div>
+            </div>
 
-        <SocialLoginSection
-          onGoToSignUp={goToSignUp}
-          onGoogleLogin={handleGoogleLogin}
-        />
+            <SocialLoginSection
+              onGoToSignUp={goToSignUp}
+              onGoogleLogin={handleGoogleLogin}
+            />
+          </>
+        )}
 
         {isEmailFindOpen && (
           <EmailFindModal onClose={() => setIsEmailFindOpen(false)} />
