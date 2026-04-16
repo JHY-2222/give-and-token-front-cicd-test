@@ -23,7 +23,7 @@ import MyPageMain from "../myPageUser/pages/MyPageMain";
 import MyPageDonationHistory from "../myPageUser/pages/MyPageDonationHistory";
 import MyPagePasswordChange from "../myPageUser/pages/MyPagePasswordChange";
 import MyPageProfileEdit from "../myPageUser/pages/MyPageProfileEdit";
-
+import GoogleSignupPage from "../signUp/pages/GoogleSignupPage";
 function HomePage() {
   return (
     <>
@@ -100,7 +100,7 @@ export default function DonationApp() {
           <Route path="/mypage/history" element={<MyPageDonationHistory />} />
           <Route path="/mypage/password" element={<MyPagePasswordChange />} />
           <Route path="/mypage/profile" element={<MyPageProfileEdit />} />
-
+          <Route path="/signup/google" element={<GoogleSignupPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
