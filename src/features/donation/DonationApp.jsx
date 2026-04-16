@@ -17,6 +17,11 @@ import NotFoundPage from "./pages/NotFoundPage";
 import OrganizationApplyPage from "./pages/OrganizationApplyPage";
 import TransparencyPage from "./pages/TransparencyPage";
 import ScrollToTop from "./components/ScrollToTop";
+import TestCampaignPage from "../foundation/pages/GabeenCampaignPageTest";
+import FoundationDetailPage from "../foundation/pages/FoundationDetailPage";
+import FoundationListPage from "../foundation/pages/FoundationListPage";
+import FoundationSignupPage from "../foundation/pages/FoundationSignupPage";
+import FoundationSignupCompletePage from "../foundation/pages/FoundationSignupCompletePage";
 
 function HomePage() {
   useEffect(() => {
@@ -147,9 +152,14 @@ export default function DonationApp() {
           <Route path="/guide" element={<DonationGuidePage />} />
           <Route path="/ledger" element={<LedgerPage />} />
           <Route path="/organization/apply" element={<OrganizationApplyPage />} />
+          <Route path="/organization/apply/form" element={<FoundationSignupPage />} />
+          <Route path="/organization/apply/complete" element={<FoundationSignupCompletePage />} />
           <Route path="/terms" element={<LegalPage />} />
           <Route path="/privacy" element={<LegalPage />} />
           <Route path="/policy" element={<LegalPage />} />
+          <Route path="/test/campaign" element={<TestCampaignPage />} />
+          <Route path="/foundation/:foundationNo" element={<FoundationDetailPage />} />
+          <Route path="/foundation/:foundationNo/campaigns" element={<FoundationListPage />} />
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
