@@ -1,4 +1,4 @@
-import { Link, Navigate, Route, Routes } from "react-router-dom";
+import { Link, Route, Routes } from "react-router-dom";
 import { Heart } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 import CampaignList from "./pages/CampaignList";
 import CampaignDetail from "./pages/CampaignDetail";
 import DonatePage from "./pages/DonatePage";
+import DonationReturnPage from "./pages/DonationReturnPage";
 import DonationGuidePage from "./pages/DonationGuidePage";
 import LedgerPage from "./pages/LedgerPage";
 import LegalPage from "./pages/LegalPage";
@@ -86,7 +87,7 @@ export default function DonationApp() {
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
-          <Route path="/donation-return" element={<Navigate to="/" replace />} />
+          <Route path="/donation-return" element={<DonationReturnPage />} />
           <Route path="/campaigns" element={<CampaignList />} />
           <Route path="/campaign/:id" element={<CampaignDetail />} />
           <Route path="/campaign/:id/donate" element={<DonatePage />} />

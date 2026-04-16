@@ -8,6 +8,14 @@ const MIN_DONATION_AMOUNT = 100;
 const MAX_DONATION_AMOUNT = 100000000;
 const TOSS_PAYMENTS_SDK_URL = "https://js.tosspayments.com/v2/standard";
 const TOSS_CLIENT_KEY = import.meta.env.VITE_TOSS_CLIENT_KEY;
+const PAYMENT_METHOD_STORAGE_KEY = "donation_payment_method";
+const PAYMENT_SUMMARY_STORAGE_KEY = "donation_payment_summary";
+const TOSS_REQUEST_METHOD = "CARD";
+const PAYMENT_METHOD_OPTIONS = [
+  { paymentMethod: "CARD", label: "카드 결제" },
+  { paymentMethod: "EASY_PAY", label: "간편결제" },
+];
+
 
 function loadTossPaymentsSdk() {
   if (window.TossPayments) return Promise.resolve(window.TossPayments);
@@ -48,11 +56,14 @@ function getCustomerKey() {
 }
 
 async function requestPaymentReady(payload) {
+  const token = window.localStorage.getItem("accessToken");
   const response = await fetch("/api/payments/ready", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
     },
+    credentials: "include",
     body: JSON.stringify(payload),
   });
 
@@ -74,10 +85,29 @@ function parseDonationAmount(value) {
   return Math.min(parsedAmount, MAX_DONATION_AMOUNT);
 }
 
+function formatDate(value) {
+  if (value == null) return "-";
+  try {
+    // LocalDateTime 배열 형식: [2024, 1, 15, ...]
+    const date = Array.isArray(value)
+      ? new Date(value[0], value[1] - 1, value[2])
+      : new Date(value);
+    if (isNaN(date.getTime())) return String(value);
+    return date.toLocaleDateString("ko-KR", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    });
+  } catch {
+    return String(value);
+  }
+}
+
 function normalizeCampaign(campaign) {
   if (!campaign) return null;
 
   return {
+    campaignNo: campaign.campaignNo ?? campaign.id,
     title: campaign.shortTitle ?? campaign.title,
     foundationName:
       campaign.foundation?.foundationName ??
@@ -85,7 +115,45 @@ function normalizeCampaign(campaign) {
       campaign.category ??
       "기부 캠페인",
     image: campaign.image ?? campaign.representativeImagePath,
+    summary: campaign.summary ?? campaign.description ?? "",
+    start_at: campaign.startAt ?? campaign.startAt,
+    end_at: campaign.endAt ?? campaign.endAt
   };
+}
+
+// JWT 페이로드를 디코딩해 클레임 객체를 반환 (서명 검증 없이 읽기만)
+function decodeJwtPayload(token) {
+  try {
+    const payloadBase64 = token.split(".")[1];
+    const padded = payloadBase64.replace(/-/g, "+").replace(/_/g, "/");
+    return JSON.parse(atob(padded));
+  } catch {
+    return null;
+  }
+}
+
+// 토큰에서 userNo(no 클레임) 추출
+function getUserNoFromToken(token) {
+  const payload = decodeJwtPayload(token);
+  return payload?.no ?? null;
+}
+
+async function fetchCurrentUserProfile() {
+  const token = window.localStorage.getItem("accessToken");
+  if (!token) throw new Error("토큰 없음");
+
+  const userNo = getUserNoFromToken(token);
+  if (!userNo) throw new Error("토큰에 userNo 없음");
+
+  // userNo는 백엔드에서 authentication.getDetails()로 추출하므로
+  // Authorization 헤더만 실어서 /users/support/mypage/my 호출
+  const response = await fetch("/users/support/mypage/my", {
+    headers: { Authorization: `Bearer ${token}` },
+    credentials: "include",
+  });
+
+  if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+  return response.json(); // { email, name, phone, nameHash, profilePath, birth }
 }
 
 export default function DonatePage() {
@@ -97,8 +165,10 @@ export default function DonatePage() {
   const [apiCampaign, setApiCampaign] = useState(null);
   const [loading, setLoading] = useState(!staticCampaign);
   const [error, setError] = useState(null);
+  const [currentUserName, setCurrentUserName] = useState("");
   const [amount, setAmount] = useState("");
   const [donorVisibility, setDonorVisibility] = useState("public");
+  const [paymentMethod, setPaymentMethod] = useState("CARD");
   const [paymentError, setPaymentError] = useState("");
   const [requestingPayment, setRequestingPayment] = useState(false);
 
@@ -130,6 +200,32 @@ export default function DonatePage() {
     };
   }, [id, staticCampaign]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const userProfile = await fetchCurrentUserProfile();
+        if (!cancelled) {
+          setCurrentUserName(
+            userProfile?.nameHash ??
+            userProfile?.nickname ??
+            userProfile?.name ??
+            "",
+          );
+        }
+      } catch {
+        if (!cancelled) {
+          setCurrentUserName("");
+        }
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   const campaign = normalizeCampaign(staticCampaign ?? apiCampaign);
   const selectedAmount = parseDonationAmount(amount);
 
@@ -156,17 +252,15 @@ export default function DonatePage() {
       setRequestingPayment(true);
 
       const customerKey = getCustomerKey();
+      const customerName = currentUserName || "기부자";
       const orderName = campaign.title.slice(0, 100);
       const successUrl = `${window.location.origin}/donation-return`;
       const failUrl = `${window.location.origin}/donation-return`;
       const readyData = await requestPaymentReady({
-        campaignId: Number(id),
+        campaignNo: Number(id),
         amount: selectedAmount,
-        donorVisibility,
-        customerKey,
-        orderName,
-        successUrl,
-        failUrl,
+        isAnonymous: donorVisibility === "private",
+        method: paymentMethod,
       });
 
       const TossPayments = await loadTossPaymentsSdk();
@@ -178,16 +272,33 @@ export default function DonatePage() {
         typeof readyData.amount === "object"
           ? readyData.amount
           : {
-              currency: "KRW",
-              value: readyData.amount ?? selectedAmount,
-            };
+            currency: "KRW",
+            value: readyData.amount ?? selectedAmount,
+          };
+      const requestMethod = paymentMethod;
+      const requestOrderId = readyData.orderId ?? createOrderId();
+      window.sessionStorage.setItem(
+        `${PAYMENT_METHOD_STORAGE_KEY}:${requestOrderId}`,
+        requestMethod,
+      );
+      window.sessionStorage.setItem(
+        `${PAYMENT_SUMMARY_STORAGE_KEY}:${requestOrderId}`,
+        JSON.stringify({
+          campaignNo: campaign.campaignNo ?? Number(id),
+          title: campaign.title,
+          foundationName: campaign.foundationName,
+          image: campaign.image,
+          summary: campaign.summary,
+          amount: paymentAmount.value ?? selectedAmount,
+        }),
+      );
 
       await payment.requestPayment({
-        method: "CARD",
+        method: TOSS_REQUEST_METHOD,
         amount: paymentAmount,
-        orderId: readyData.orderId ?? createOrderId(),
+        orderId: requestOrderId,
         orderName: readyData.orderName ?? orderName,
-        customerName: donorVisibility === "public" ? "김가빈가" : "숨은천사",
+        customerName,
         successUrl: readyData.successUrl ?? successUrl,
         failUrl: readyData.failUrl ?? failUrl,
         metadata: {
@@ -249,6 +360,9 @@ export default function DonatePage() {
             <h1 className="break-keep text-2xl font-bold leading-snug text-ink">
               {campaign.title}
             </h1>
+            <p className="mb-2 text-base font-bold text-stone-400">
+              {formatDate(campaign.start_at)} ~ {formatDate(campaign.end_at)}
+            </p>
           </div>
         </section>
 
@@ -291,7 +405,7 @@ export default function DonatePage() {
 
           <div className="grid gap-5 sm:grid-cols-2">
             {[
-              ["public", "공개", "김가빈가", UserRound],
+              ["public", "공개", "사용자 닉네임", UserRound],
               ["private", "비공개", "숨은천사", Smile],
             ].map(([value, label, name, Icon]) => {
               const selected = donorVisibility === value;
@@ -301,17 +415,15 @@ export default function DonatePage() {
                   key={value}
                   type="button"
                   onClick={() => setDonorVisibility(value)}
-                  className={`min-h-[180px] rounded-md border bg-white p-5 text-left transition-colors ${
-                    selected ? "border-stone-500" : "border-stone-200"
-                  }`}
+                  className={`min-h-[180px] rounded-md border bg-white p-5 text-left transition-colors ${selected ? "border-stone-500" : "border-stone-200"
+                    }`}
                 >
                   <span className="mb-7 flex items-center gap-4 text-xl font-bold text-stone-500">
                     <span
-                      className={`flex h-8 w-8 items-center justify-center rounded-full border ${
-                        selected
-                          ? "border-ink bg-ink text-white"
-                          : "border-stone-300 text-transparent"
-                      }`}
+                      className={`flex h-8 w-8 items-center justify-center rounded-full border ${selected
+                        ? "border-ink bg-ink text-white"
+                        : "border-stone-300 text-transparent"
+                        }`}
                     >
                       {selected && "✓"}
                     </span>
@@ -326,6 +438,29 @@ export default function DonatePage() {
                 </button>
               );
             })}
+          </div>
+
+          <div className="mt-8">
+            <h3 className="mb-3 text-2xl font-bold text-ink">결제수단</h3>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {PAYMENT_METHOD_OPTIONS.map(({ paymentMethod: optionValue, label }) => {
+                const selected = paymentMethod === optionValue;
+
+                return (
+                  <button
+                    key={optionValue}
+                    type="button"
+                    onClick={() => setPaymentMethod(optionValue)}
+                    className={`h-14 rounded-md border text-base font-bold transition-colors ${selected
+                      ? "border-ink bg-ink text-white"
+                      : "border-stone-300 bg-white text-stone-500 hover:border-ink hover:text-ink"
+                      }`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {paymentError && (

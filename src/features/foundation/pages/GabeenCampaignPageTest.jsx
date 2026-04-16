@@ -112,12 +112,7 @@ export default function TestCampaignPage() {
               <h1 className="mb-6 text-4xl font-display font-bold leading-tight text-ink md:text-5xl">
                 {campaign.title}
               </h1>
-              <div className="flex flex-wrap gap-6 text-sm font-medium text-stone-400">
-                <div className="flex items-center gap-2">
-                  <Clock size={18} />
-                  {campaign.daysLeft != null ? `${campaign.daysLeft}일 남음` : "-"}
-                </div>
-              </div>
+
             </div>
 
             {/* 이미지 그리드 */}
@@ -153,9 +148,8 @@ export default function TestCampaignPage() {
                   key={tab.key}
                   type="button"
                   onClick={() => setActiveTab(tab.key)}
-                  className={`relative pb-4 text-sm font-bold uppercase tracking-widest transition-all ${
-                    activeTab === tab.key ? "text-primary" : "text-stone-400 hover:text-ink"
-                  }`}
+                  className={`relative pb-4 text-sm font-bold uppercase tracking-widest transition-all ${activeTab === tab.key ? "text-primary" : "text-stone-400 hover:text-ink"
+                    }`}
                 >
                   {tab.label}
                   {activeTab === tab.key && (
@@ -214,9 +208,8 @@ export default function TestCampaignPage() {
                           ].map(([label, value], index) => (
                             <div
                               key={label}
-                              className={`flex items-center justify-between py-5 ${
-                                index === 1 ? "border-b border-line" : ""
-                              }`}
+                              className={`flex items-center justify-between py-5 ${index === 1 ? "border-b border-line" : ""
+                                }`}
                             >
                               <span className="text-sm font-medium text-stone-500">{label}</span>
                               <span className="text-sm font-bold text-ink">{value}</span>

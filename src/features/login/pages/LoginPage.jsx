@@ -58,8 +58,9 @@ const LoginPage = () => {
         throw new Error(errorText || "로그인에 실패했어.");
       }
 
-      const data = await response.json();
+      const data = await response.json().catch(() => null);
       console.log("로그인 성공:", data);
+      localStorage.setItem('accessToken', data.accessToken);
       redirectByRole(loginData.role);
     } catch (error) {
       console.error("로그인 중 오류 발생:", error);
