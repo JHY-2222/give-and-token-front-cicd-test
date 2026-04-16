@@ -8,20 +8,32 @@ export default defineConfig({
     proxy: {
       "/api": {
         target: "http://localhost:8090",
-        changeOrigin: true
+        changeOrigin: true,
       },
       "/admin": {
         target: "http://localhost:8090",
-        changeOrigin: true
+        changeOrigin: true,
       },
       "/oauth2": {
         target: "http://localhost:8090",
-        changeOrigin: true
+        changeOrigin: true,
+      },
+      "/login/oauth2": {
+        target: "http://localhost:8090",
+        changeOrigin: true,
+      },
+      "/uploads": {
+        target: "http://localhost:8090",
+        changeOrigin: true,
+      "/oauth2": {
+        target: "http://localhost:8090",
+        changeOrigin: true,
       },
       "/users": {
         target: "http://localhost:8090",
-        changeOrigin: true
+        changeOrigin: true,
       }
     }
   }
+    },
 });
