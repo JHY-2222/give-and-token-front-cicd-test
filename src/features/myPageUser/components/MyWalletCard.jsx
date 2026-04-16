@@ -25,7 +25,7 @@ export default function WalletCard({ walletInfo }) {
           <div className="space-y-1">
             <p className="card-label-clean">My Wallet Address</p>
             <div className="flex items-center gap-3 bg-surface p-4 rounded-2xl border border-line group">
-              <p className="text-sm font-bold text-slate-700 font-mono break-all leading-relaxed">
+              <p className="text-sm font-bold text-ink/70 font-mono break-all leading-relaxed">
                 {walletInfo?.walletAddress ?? "연결된 지갑이 없습니다."}
               </p>
               <button 

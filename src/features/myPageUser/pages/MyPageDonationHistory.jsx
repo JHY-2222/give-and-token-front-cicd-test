@@ -79,14 +79,14 @@ export default function MyPageDonationHistory() {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
                   <div className="md:col-span-7">
                     <p className="card-label-clean">Campaign</p>
-                    <h3 className="text-2xl font-bold text-slate-800 mb-4">{item.title ?? "-"}</h3>
+                    <h3 className="text-2xl font-bold text-ink mb-4">{item.title ?? "-"}</h3>
                     
                     <div className="flex flex-wrap gap-4">
-                      <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-400">
+                      <div className="flex items-center gap-1.5 bg-surface px-3 py-1.5 rounded-xl text-xs font-bold text-ink/40">
                         <Calendar size={14} />
                         {formatDate(item.transaction?.sentAt || item.transaction?.createdAt)}
                       </div>
-                      <div className="flex items-center gap-1.5 bg-slate-50 px-3 py-1.5 rounded-xl text-xs font-bold text-slate-300 uppercase tracking-tighter">
+                      <div className="flex items-center gap-1.5 bg-surface px-3 py-1.5 rounded-xl text-xs font-bold text-ink/20 uppercase tracking-tighter">
                         ID-{item.campaignNo ?? "-"}
                       </div>
                     </div>
@@ -94,7 +94,7 @@ export default function MyPageDonationHistory() {
 
                   <div className="md:col-span-5 flex flex-col md:items-end gap-3">
                     <p className="card-label-clean md:text-right">Donation Amount</p>
-                    <p className="text-3xl font-black text-slate-900">{formatAmount(item.transaction?.amount)}</p>
+                    <p className="text-3xl font-black text-ink">{formatAmount(item.transaction?.amount)}</p>
                     
                     <div className="flex items-center gap-3 mt-2">
                        <span className={`status-tag-clean ${

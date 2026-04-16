@@ -101,9 +101,19 @@ export default function MyPageMain() {
         {/* 우측 메인 콘텐츠 영역 */}
         <div className="flex-1 min-w-0 space-y-12">
           {/* 제목: 대폭 강화 (4xl -> 5xl급) */}
-          <header className="mb-10">
-            <h1 className="text-5xl font-black text-slate-900 tracking-tight !mb-0 !text-left">마이페이지</h1>
-            <p className="text-slate-400 mt-4 text-lg font-medium">후원 활동과 자산 현황을 한 눈에 확인하세요.</p>
+          <header className="mb-12 relative">
+            <div className="absolute -left-8 top-1/2 -translate-y-1/2 w-1.5 h-16 bg-primary rounded-full hidden lg:block" />
+            <div className="flex items-center gap-3 mb-2">
+              <span className="px-3 py-1 rounded-full bg-orange-100 text-primary text-[10px] font-black uppercase tracking-widest">
+                Member Dashboard
+              </span>
+            </div>
+            <h1 className="text-5xl font-black text-ink tracking-tight !mb-0 !text-left">
+              반가워요, <span className="text-primary">{myInfo?.name || "사용자"}</span>님!
+            </h1>
+            <p className="text-ink/40 mt-4 text-lg font-medium">
+              오늘도 따뜻한 마음을 나눠주셔서 감사합니다.
+            </p>
           </header>
 
           {/* 1단: 지갑 정보 (상단 배치) */}
@@ -112,11 +122,11 @@ export default function MyPageMain() {
           </div>
 
           {/* 2단: 요약(좌) & 기부내역(우) */}
-          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-start">
-            <div className="xl:col-span-4 h-full">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-stretch">
+            <div className="xl:col-span-4">
               <DonationSummaryCard summary={summary} />
             </div>
-            <div className="xl:col-span-8 h-full">
+            <div className="xl:col-span-8">
               <DonationHistorySection
                 donationHistory={transactionList}
                 onViewAll={() => navigate("/mypage/history")}

@@ -154,10 +154,9 @@ function HomePage() {
 export default function DonationApp() {
   const location = useLocation();
   const isFoundationRoute = location.pathname.startsWith("/foundation");
-  const isMyPageRoute = location.pathname.startsWith("/mypage");
 
   // 💡 2. 하나라도 해당하면 true가 되도록 변수 생성
-  const shouldHideLayout = isFoundationRoute || isMyPageRoute;
+  const shouldHideLayout = isFoundationRoute;
   return (
     <div className="min-h-screen bg-surface selection:bg-primary selection:text-white">
       <ScrollToTop />
