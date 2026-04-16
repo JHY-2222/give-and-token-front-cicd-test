@@ -136,6 +136,12 @@ function HomePage() {
                 >
                   캠페인 둘러보기
                 </Link>
+                <Link
+                  to="/campaigns"
+                  className="bg-white/10 backdrop-blur-md border-2 border-white/30 px-8 py-3.5 rounded-full text-base font-bold hover:bg-white/20 transition-all"
+                >
+                  지금 참여하기
+                </Link>
               </div>
             </div>
           </div>
@@ -147,12 +153,14 @@ function HomePage() {
 
 export default function DonationApp() {
   const location = useLocation();
-  const isFoundationRoute = location.pathname.startsWith("/foundation/");
+  const isFoundationRoute = location.pathname.startsWith("/foundation");
 
+  // 💡 2. 하나라도 해당하면 true가 되도록 변수 생성
+  const shouldHideLayout = isFoundationRoute;
   return (
     <div className="min-h-screen bg-surface selection:bg-primary selection:text-white">
       <ScrollToTop />
-      {!isFoundationRoute ? <Navbar /> : null}
+      {!shouldHideLayout && <Navbar />}
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -194,9 +202,10 @@ export default function DonationApp() {
 
           {/* 마이페이지 */}
           <Route path="/mypage" element={<MyPageMain />} />
+          <Route path="/mypage/profile" element={<MyPageProfileEdit />} />
           <Route path="/mypage/history" element={<MyPageDonationHistory />} />
           <Route path="/mypage/password" element={<MyPagePasswordChange />} />
-          
+
           <Route path="/foundation/me" element={<FoundationDashboardPage />} />
           <Route path="/foundation/register" element={<FoundationRegisterPage />} />
 
@@ -209,7 +218,8 @@ export default function DonationApp() {
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
-      {!isFoundationRoute ? <Footer /> : null}
+
+      {!shouldHideLayout && <Footer />}
     </div>
   );
 }
