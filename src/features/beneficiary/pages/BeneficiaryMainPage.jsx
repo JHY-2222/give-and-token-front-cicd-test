@@ -46,6 +46,7 @@ const BeneficiaryMainPage = () => {
         beneficiaryApi.getMyCampaigns(),
       ]);
 
+      console.log("UserInfo loaded:", info);
       setUserInfo(info);
       setReports(reportsData || []);
       setCampaigns(campaignsData || []);
@@ -194,7 +195,7 @@ const BeneficiaryMainPage = () => {
       alert("환전 신청이 완료되었습니다. 관리자 승인 후 계좌로 입금됩니다.");
       setIsRedeemModalOpen(false);
       setRedeemAmount("");
-      fetchData(); // 잔액 업데이트를 위해 새로고침
+      fetchData(); 
     } catch (error) {
       alert("환전 신청 중 오류가 발생했습니다.");
     }
@@ -251,28 +252,53 @@ const BeneficiaryMainPage = () => {
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+          
           <aside className="lg:col-span-3 space-y-4">
             <nav className="bg-white rounded-[2rem] p-4 shadow-sm border-4 border-line">
-              <button onClick={() => setActiveTab("dashboard")} className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all ${activeTab === 'dashboard' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:bg-surface'}`}>
-                <Wallet size={20} /> 내 현황 및 지갑
+              <button 
+                onClick={() => setActiveTab("dashboard")}
+                className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all ${activeTab === 'dashboard' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:bg-surface'}`}
+              >
+                <Wallet size={20} />
+                내 현황 및 지갑
               </button>
-              <button onClick={() => setActiveTab("reports")} className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all ${activeTab === 'reports' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:bg-surface'}`}>
-                <FileText size={20} /> 참여 캠페인 & 보고서
+              <button 
+                onClick={() => setActiveTab("reports")}
+                className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all ${activeTab === 'reports' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:bg-surface'}`}
+              >
+                <FileText size={20} />
+                참여 캠페인 & 보고서
               </button>
-              <button onClick={() => setActiveTab("profile")} className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all ${activeTab === 'profile' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:bg-surface'}`}>
-                <Settings size={20} /> 정보 수정
+              <button 
+                onClick={() => setActiveTab("profile")}
+                className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all ${activeTab === 'profile' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:bg-surface'}`}
+              >
+                <Settings size={20} />
+                정보 수정
               </button>
             </nav>
+
+            <div className="bg-secondary/10 p-6 rounded-[2rem] border-2 border-secondary/20">
+              <h3 className="font-bold text-secondary mb-2 flex items-center gap-2">
+                <AlertCircle size={16} />
+                도움이 필요하신가요?
+              </h3>
+              <p className="text-xs text-stone-600 leading-relaxed">
+                보고서 작성이나 환전 방법이 궁금하시면 고객센터로 문의해 주세요.
+              </p>
+            </div>
           </aside>
 
           <main className="lg:col-span-9">
+            
             {activeTab === "dashboard" && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <div className="bg-white rounded-[3rem] p-8 md:p-10 shadow-xl shadow-stone-200/50 border-4 border-line relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
+                  
                   <div className="relative z-10">
                     <div className="flex items-center justify-between mb-8">
-                      <span className="bg-accent/30 text-ink px-4 py-1 rounded-full text-xs font-bold">BENEFICIARY WALLET</span>
+                      <span className="bg-accent/30 text-ink px-4 py-1 rounded-full text-xs font-bold">BENEFICIARY STATUS</span>
                       <Wallet className="text-primary" size={28} />
                     </div>
                     
@@ -293,7 +319,10 @@ const BeneficiaryMainPage = () => {
                         <code className="text-[10px] font-mono break-all text-stone-600 block">
                           {userInfo?.walletAddress || "지갑 정보를 불러올 수 없습니다."}
                         </code>
-                        <p className="text-[10px] text-primary font-bold mt-2">ID: {userInfo?.walletNo}</p>
+                        <div className="mt-2 flex items-center gap-2">
+                          <span className="text-[10px] text-stone-400 font-bold">ID:</span>
+                          <span className="text-[10px] text-primary font-black">{userInfo?.walletNo || "N/A"}</span>
+                        </div>
                       </div>
                       
                       <div className="bg-stone-50 rounded-2xl p-5 border-2 border-line border-dashed">
@@ -304,7 +333,7 @@ const BeneficiaryMainPage = () => {
                           </button>
                         </div>
                         <p className="text-sm font-bold text-ink">{userInfo?.account || "계좌 정보를 등록해주세요."}</p>
-                        <p className="text-[10px] text-stone-400 mt-1">* 환전 시 이 계좌로 현금이 입금됩니다.</p>
+                        <p className="text-[10px] text-stone-400 mt-1">* 환전 신청 시 이 계좌로 현금이 입금됩니다.</p>
                       </div>
                     </div>
 
@@ -323,13 +352,15 @@ const BeneficiaryMainPage = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="bg-white rounded-[2rem] p-6 border-4 border-line">
                     <h3 className="font-bold mb-4 flex items-center gap-2">
-                      <CheckCircle className="text-green-500" size={20} /> 완료된 보고서
+                      <CheckCircle className="text-green-500" size={20} />
+                      완료된 보고서
                     </h3>
                     <div className="text-3xl font-display font-black">{reports.length}건</div>
                   </div>
                   <div className="bg-white rounded-[2rem] p-6 border-4 border-line">
                     <h3 className="font-bold mb-4 flex items-center gap-2">
-                      <PlusCircle className="text-primary" size={20} /> 진행 중인 캠페인
+                      <PlusCircle className="text-primary" size={20} />
+                      진행 중인 캠페인
                     </h3>
                     <div className="text-3xl font-display font-black">{campaigns.length}건</div>
                   </div>
@@ -345,8 +376,12 @@ const BeneficiaryMainPage = () => {
                     {campaigns.length > 0 ? campaigns.map(campaign => (
                       <div key={campaign.campaignNo} className="bg-white p-6 rounded-3xl border-4 border-line hover:border-primary/30 transition-all group">
                         <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">{campaign.title}</h4>
-                        <button onClick={() => handleCreateReport(campaign)} className="w-full mt-4 bg-surface py-3 rounded-xl font-bold text-sm text-stone-600 flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-all">
-                          <PlusCircle size={16} /> 보고서 작성하기
+                        <button 
+                          onClick={() => handleCreateReport(campaign)}
+                          className="w-full mt-4 bg-surface py-3 rounded-xl font-bold text-sm text-stone-600 flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-all"
+                        >
+                          <PlusCircle size={16} />
+                          보고서 작성하기
                         </button>
                       </div>
                     )) : (
@@ -356,11 +391,16 @@ const BeneficiaryMainPage = () => {
                     )}
                   </div>
                 </section>
+
                 <section>
                   <h2 className="text-2xl font-display font-bold mb-6">내가 작성한 보고서</h2>
                   <div className="space-y-4">
                     {reports.length > 0 ? reports.map(report => (
-                      <div key={report.reportNo} onClick={() => handleViewReport(report.reportNo)} className="bg-white p-6 rounded-3xl border-4 border-line flex items-center justify-between group hover:shadow-lg hover:shadow-stone-100 transition-all cursor-pointer">
+                      <div 
+                        key={report.reportNo} 
+                        onClick={() => handleViewReport(report.reportNo)}
+                        className="bg-white p-6 rounded-3xl border-4 border-line flex items-center justify-between group hover:shadow-lg hover:shadow-stone-100 transition-all cursor-pointer"
+                      >
                         <div className="flex items-center gap-4">
                           <div className="w-12 h-12 bg-stone-100 rounded-2xl flex items-center justify-center text-stone-400 group-hover:bg-primary/10 group-hover:text-primary transition-all">
                             <FileText size={24} />
@@ -412,35 +452,69 @@ const BeneficiaryMainPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-stone-500 ml-1">이름</label>
-                      <input name="name" type="text" required defaultValue={userInfo?.name} className="w-full px-6 py-4 rounded-2xl border-2 border-line focus:border-primary focus:ring-0 transition-all" />
+                      <input 
+                        name="name"
+                        type="text" 
+                        required
+                        defaultValue={userInfo?.name}
+                        className="w-full px-6 py-4 rounded-2xl border-2 border-line focus:border-primary focus:ring-0 transition-all"
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-stone-500 ml-1">연락처</label>
-                      <input name="phone" type="text" required defaultValue={userInfo?.phone} className="w-full px-6 py-4 rounded-2xl border-2 border-line focus:border-primary focus:ring-0 transition-all" />
+                      <input 
+                        name="phone"
+                        type="text" 
+                        required
+                        defaultValue={userInfo?.phone}
+                        className="w-full px-6 py-4 rounded-2xl border-2 border-line focus:border-primary focus:ring-0 transition-all"
+                      />
                     </div>
                   </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-stone-500 ml-1">엔트리 코드 (Entry Code)</label>
-                      <input type="text" value={userInfo?.entryCode || ""} readOnly className="w-full px-6 py-4 rounded-2xl border-2 border-line bg-surface text-stone-400 cursor-not-allowed transition-all" />
+                      <input 
+                        type="text" 
+                        value={userInfo?.entryCode || ""}
+                        readOnly
+                        className="w-full px-6 py-4 rounded-2xl border-2 border-line bg-surface text-stone-400 cursor-not-allowed transition-all"
+                      />
                     </div>
                     <div className="space-y-2">
                       <label className="text-sm font-bold text-stone-500 ml-1">수혜자 유형</label>
-                      <input type="text" value={userInfo?.beneficiaryType === 'INDIVIDUAL' ? "개인 (Individual)" : (userInfo?.beneficiaryType === 'ORGANIZATION' ? "단체 (Organization)" : "")} readOnly className="w-full px-6 py-4 rounded-2xl border-2 border-line bg-surface text-stone-400 cursor-not-allowed transition-all" />
+                      <input 
+                        type="text" 
+                        value={userInfo?.beneficiaryType === 'INDIVIDUAL' ? "개인 (Individual)" : (userInfo?.beneficiaryType === 'ORGANIZATION' ? "단체 (Organization)" : "")}
+                        readOnly
+                        className="w-full px-6 py-4 rounded-2xl border-2 border-line bg-surface text-stone-400 cursor-not-allowed transition-all"
+                      />
                     </div>
                   </div>
+
                   <div className="space-y-2">
                     <label className="text-sm font-bold text-stone-500 ml-1 flex items-center gap-2">
-                      <Banknote size={16} /> 은행 계좌 정보 (환전 시 입금 계좌)
+                      <Banknote size={16} />
+                      은행 계좌 정보 (환전 시 입금 계좌)
                     </label>
-                    <input name="account" type="text" placeholder="예: 신한은행 110-123-456789" defaultValue={userInfo?.account} className="w-full px-6 py-4 rounded-2xl border-2 border-line focus:border-primary focus:ring-0 transition-all" />
+                    <input 
+                      name="account"
+                      type="text" 
+                      placeholder="예: 신한은행 110-123-456789"
+                      defaultValue={userInfo?.account}
+                      className="w-full px-6 py-4 rounded-2xl border-2 border-line focus:border-primary focus:ring-0 transition-all"
+                    />
                   </div>
                   <div className="pt-6">
-                    <button type="submit" className="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.01] transition-all">정보 저장하기</button>
+                    <button type="submit" className="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.01] transition-all">
+                      정보 저장하기
+                    </button>
                   </div>
                 </form>
               </div>
             )}
+
           </main>
         </div>
       </div>
@@ -449,7 +523,13 @@ const BeneficiaryMainPage = () => {
       {isRedeemModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
           <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative animate-in zoom-in-95 duration-200">
-            <button onClick={() => setIsRedeemModalOpen(false)} className="absolute top-8 right-8 text-stone-400 hover:text-ink transition-colors"><X size={24} /></button>
+            <button 
+              onClick={() => setIsRedeemModalOpen(false)}
+              className="absolute top-8 right-8 text-stone-400 hover:text-ink transition-colors"
+            >
+              <X size={24} />
+            </button>
+
             <h3 className="text-2xl font-display font-bold mb-2">환전 신청하기</h3>
             <p className="text-stone-500 text-sm mb-8">보유하신 GNT 토큰을 현금으로 환전합니다.</p>
 
@@ -486,7 +566,10 @@ const BeneficiaryMainPage = () => {
                 </p>
               </div>
 
-              <button type="submit" className="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">
+              <button 
+                type="submit" 
+                className="w-full bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+              >
                 신청하기
               </button>
             </form>
@@ -498,51 +581,109 @@ const BeneficiaryMainPage = () => {
       {isReportModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm overflow-y-auto">
           <div className="bg-white w-full max-w-3xl rounded-[3rem] p-8 md:p-10 shadow-2xl relative my-10 animate-in zoom-in-95 duration-200">
-            <button onClick={() => setIsReportModalOpen(false)} className="absolute top-8 right-8 text-stone-400 hover:text-ink transition-colors"><X size={24} /></button>
+            <button 
+              onClick={() => setIsReportModalOpen(false)}
+              className="absolute top-8 right-8 text-stone-400 hover:text-ink transition-colors"
+            >
+              <X size={24} />
+            </button>
+
             <div className="mb-8">
               <div className="flex items-center gap-3 mb-2">
-                <h3 className="text-2xl font-display font-bold">{isCreateMode ? '보고서 작성' : (isEditMode ? '보고서 수정' : '보고서 상세')}</h3>
+                <h3 className="text-2xl font-display font-bold">
+                  {isCreateMode ? '보고서 작성' : (isEditMode ? '보고서 수정' : '보고서 상세')}
+                </h3>
                 {!isCreateMode && selectedReport && getStatusBadge(selectedReport.approvalStatus)}
               </div>
+              <p className="text-stone-500 text-sm">기부금이 투명하게 사용되었음을 증명하기 위해 상세히 작성해주세요.</p>
             </div>
 
             {!isCreateMode && selectedReport?.approvalStatus === 'REJECTED' && selectedReport.rejectReason && (
               <div className="bg-rose-50 border-2 border-rose-100 p-6 rounded-2xl mb-8">
-                <h4 className="font-bold text-rose-600 flex items-center gap-2 mb-2"><AlertCircle size={18} /> 반려 사유</h4>
+                <h4 className="font-bold text-rose-600 flex items-center gap-2 mb-2">
+                  <AlertCircle size={18} />
+                  반려 사유
+                </h4>
                 <p className="text-sm text-rose-500 leading-relaxed">{selectedReport.rejectReason}</p>
               </div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-2">
-                <label className="text-sm font-bold text-stone-500">보고서 제목</label>
-                <input type="text" required value={reportFormData.title} onChange={(e) => setReportFormData({...reportFormData, title: e.target.value})} readOnly={!isEditMode} className={`w-full px-6 py-4 rounded-2xl border-2 border-line transition-all ${!isEditMode ? 'bg-surface text-stone-500' : 'focus:border-primary'}`} />
+                <label className="text-sm font-bold text-stone-500 ml-1">보고서 제목</label>
+                <input 
+                  type="text"
+                  required
+                  value={reportFormData.title}
+                  onChange={(e) => setReportFormData({...reportFormData, title: e.target.value})}
+                  readOnly={!isEditMode}
+                  className={`w-full px-6 py-4 rounded-2xl border-2 border-line transition-all ${!isEditMode ? 'bg-surface text-stone-500' : 'focus:border-primary'}`}
+                />
               </div>
+
               <div className="space-y-2">
-                <label className="text-sm font-bold text-stone-500">사용 목적 (종합)</label>
-                <input type="text" required value={reportFormData.usagePurpose} onChange={(e) => setReportFormData({...reportFormData, usagePurpose: e.target.value})} readOnly={!isEditMode} className={`w-full px-6 py-4 rounded-2xl border-2 border-line transition-all ${!isEditMode ? 'bg-surface text-stone-500' : 'focus:border-primary'}`} />
+                <label className="text-sm font-bold text-stone-500 ml-1">사용 목적 (종합)</label>
+                <input 
+                  type="text"
+                  required
+                  placeholder="예: 생필품 구매 및 교육비 지원"
+                  value={reportFormData.usagePurpose}
+                  onChange={(e) => setReportFormData({...reportFormData, usagePurpose: e.target.value})}
+                  readOnly={!isEditMode}
+                  className={`w-full px-6 py-4 rounded-2xl border-2 border-line transition-all ${!isEditMode ? 'bg-surface text-stone-500' : 'focus:border-primary'}`}
+                />
               </div>
+
               <div className="space-y-2">
-                <label className="text-sm font-bold text-stone-500">상세 활동 내용</label>
-                <textarea rows="5" required value={reportFormData.content} onChange={(e) => setReportFormData({...reportFormData, content: e.target.value})} readOnly={!isEditMode} className={`w-full px-6 py-4 rounded-2xl border-2 border-line transition-all resize-none ${!isEditMode ? 'bg-surface text-stone-500' : 'focus:border-primary'}`} />
+                <label className="text-sm font-bold text-stone-500 ml-1">상세 활동 내용</label>
+                <textarea 
+                  rows="5"
+                  required
+                  value={reportFormData.content}
+                  onChange={(e) => setReportFormData({...reportFormData, content: e.target.value})}
+                  readOnly={!isEditMode}
+                  className={`w-full px-6 py-4 rounded-2xl border-2 border-line transition-all resize-none ${!isEditMode ? 'bg-surface text-stone-500' : 'focus:border-primary'}`}
+                />
               </div>
 
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <label className="text-sm font-bold text-stone-500 flex items-center gap-2"><Camera size={18} /> 증빙 사진</label>
+                  <label className="text-sm font-bold text-stone-500 ml-1 flex items-center gap-2">
+                    <Camera size={18} />
+                    증빙 사진 첨부
+                  </label>
                   {isEditMode && (
                     <label className="cursor-pointer bg-stone-100 hover:bg-stone-200 text-stone-600 px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2">
-                      <Upload size={14} /> 사진 추가
+                      <Upload size={14} />
+                      사진 추가
                       <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageChange} />
                     </label>
                   )}
                 </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {reportFormData.images.map((img, idx) => (
                     <div key={idx} className="bg-surface rounded-2xl p-4 border-2 border-line relative group">
-                      <div className="aspect-video rounded-xl overflow-hidden mb-3 bg-stone-200"><img src={img.preview} alt="preview" className="w-full h-full object-cover" /></div>
-                      <input type="text" placeholder="용도 입력" value={img.purpose} onChange={(e) => handlePurposeChange(idx, e.target.value)} readOnly={!isEditMode} className={`w-full px-3 py-2 rounded-lg border-2 border-line text-xs transition-all ${!isEditMode ? 'bg-stone-50 text-stone-500' : 'focus:border-primary bg-white'}`} />
-                      {isEditMode && <button type="button" onClick={() => removeImage(idx)} className="absolute top-2 right-2 p-2 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"><Trash2 size={14} /></button>}
+                      <div className="aspect-video rounded-xl overflow-hidden mb-3 bg-stone-200">
+                        <img src={img.preview} alt="preview" className="w-full h-full object-cover" />
+                      </div>
+                      <input 
+                        type="text"
+                        placeholder="이 사진의 용도를 입력하세요 (예: 영수증)"
+                        value={img.purpose}
+                        onChange={(e) => handlePurposeChange(idx, e.target.value)}
+                        readOnly={!isEditMode}
+                        className={`w-full px-3 py-2 rounded-lg border-2 border-line text-xs transition-all ${!isEditMode ? 'bg-stone-50 text-stone-500' : 'focus:border-primary bg-white'}`}
+                      />
+                      {isEditMode && (
+                        <button 
+                          type="button"
+                          onClick={() => removeImage(idx)}
+                          className="absolute top-2 right-2 p-2 bg-rose-500 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -550,13 +691,40 @@ const BeneficiaryMainPage = () => {
 
               <div className="flex gap-4 pt-6">
                 {isEditMode ? (
-                  <><button type="submit" className="flex-1 bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] transition-all">{isCreateMode ? '보고서 제출' : '수정 완료'}</button>
-                  <button type="button" onClick={() => isCreateMode ? setIsReportModalOpen(false) : setIsEditMode(false)} className="flex-1 bg-white border-2 border-line py-4 rounded-2xl font-bold text-stone-600 hover:bg-stone-50 transition-all">취소</button></>
+                  <>
+                    <button 
+                      type="submit"
+                      className="flex-1 bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                    >
+                      {isCreateMode ? '보고서 제출하기' : '수정 완료'}
+                    </button>
+                    <button 
+                      type="button"
+                      onClick={() => isCreateMode ? setIsReportModalOpen(false) : setIsEditMode(false)}
+                      className="flex-1 bg-white border-2 border-line py-4 rounded-2xl font-bold text-stone-600 hover:bg-stone-50 transition-all"
+                    >
+                      취소
+                    </button>
+                  </>
                 ) : (
-                  <>{(selectedReport?.approvalStatus === 'REJECTED' || selectedReport?.approvalStatus === 'PENDING') && (
-                    <button type="button" onClick={() => setIsEditMode(true)} className="flex-1 bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all">수정하기</button>
-                  )}
-                  <button type="button" onClick={() => setIsReportModalOpen(false)} className="flex-1 bg-white border-2 border-line py-4 rounded-2xl font-bold text-stone-600 hover:bg-stone-50 transition-all">닫기</button></>
+                  <>
+                    {(selectedReport?.approvalStatus === 'REJECTED' || selectedReport?.approvalStatus === 'PENDING') && (
+                      <button 
+                        type="button"
+                        onClick={() => setIsEditMode(true)}
+                        className="flex-1 bg-primary text-white py-4 rounded-2xl font-bold shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all"
+                      >
+                        수정하기
+                      </button>
+                    )}
+                    <button 
+                      type="button"
+                      onClick={() => setIsReportModalOpen(false)}
+                      className="flex-1 bg-white border-2 border-line py-4 rounded-2xl font-bold text-stone-600 hover:bg-stone-50 transition-all"
+                    >
+                      닫기
+                    </button>
+                  </>
                 )}
               </div>
             </form>
