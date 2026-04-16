@@ -22,6 +22,12 @@ import FoundationDetailPage from "../foundation/pages/FoundationDetailPage";
 import FoundationListPage from "../foundation/pages/FoundationListPage";
 import FoundationSignupPage from "../foundation/pages/FoundationSignupPage";
 import FoundationSignupCompletePage from "../foundation/pages/FoundationSignupCompletePage";
+import LoginPage from "../login/pages/LoginPage";
+import SignupPage from "../signUp/pages/SignupPage";
+import MyPageMain from "../myPageUser/pages/MyPageMain";
+import MyPageDonationHistory from "../myPageUser/pages/MyPageDonationHistory";
+import MyPagePasswordChange from "../myPageUser/pages/MyPagePasswordChange";
+import MyPageProfileEdit from "../myPageUser/pages/MyPageProfileEdit";
 
 function HomePage() {
   return (
@@ -97,6 +103,14 @@ export default function DonationApp() {
           <Route path="/test/campaign" element={<TestCampaignPage />} />
           <Route path="/foundation/:foundationNo" element={<FoundationDetailPage />} />
           <Route path="/foundation/:foundationNo/campaigns" element={<FoundationListPage />} />
+
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
+          <Route path="/mypage" element={<MyPageMain />} />
+          <Route path="/mypage/history" element={<MyPageDonationHistory />} />
+          <Route path="/mypage/password" element={<MyPagePasswordChange />} />
+          <Route path="/mypage/profile" element={<MyPageProfileEdit />} />
+
           <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
