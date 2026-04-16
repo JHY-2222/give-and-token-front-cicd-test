@@ -66,7 +66,7 @@ export default function FoundationApplicationResult({ result, authInfo }) {
           type="button"
           className="w-full rounded-2xl bg-slate-950 px-6 py-5 text-lg font-semibold text-white shadow-lg shadow-slate-300"
           onClick={() => {
-            window.location.href = "/";
+            window.location.href = "/foundation/me";
           }}
         >
           홈으로 돌아가기

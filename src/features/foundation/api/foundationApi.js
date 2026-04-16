@@ -9,15 +9,52 @@ async function parseErrorResponse(response) {
 
   if (contentType.includes("application/json")) {
     const data = await response.json();
-    return data.message || data.error || "요청 처리 중 오류가 발생했습니다.";
+    return data.message || data.error || "?붿껌 泥섎━ 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.";
   }
 
   const text = await response.text();
-  return text || "요청 처리 중 오류가 발생했습니다.";
+  return text || "?붿껌 泥섎━ 以??ㅻ쪟媛 諛쒖깮?덉뒿?덈떎.";
 }
 
 function getStoredAccessToken() {
-  return window.localStorage.getItem(FOUNDATION_AUTH_STORAGE_KEY) || "";
+  return (
+    window.localStorage.getItem(FOUNDATION_AUTH_STORAGE_KEY) ||
+    window.localStorage.getItem("accessToken") ||
+    ""
+  );
+}
+
+function parseJwtPayload(token) {
+  if (!token) {
+    return null;
+  }
+
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) {
+      return null;
+    }
+    const normalized = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const padded = normalized.padEnd(Math.ceil(normalized.length / 4) * 4, "=");
+    const decoded = window.atob(padded);
+    return JSON.parse(decoded);
+  } catch {
+    return null;
+  }
+}
+
+function getFoundationNoForGuard() {
+  const storedAuth = getStoredFoundationAuth();
+  if (storedAuth?.foundationNo) {
+    return storedAuth.foundationNo;
+  }
+
+  const payload = parseJwtPayload(getStoredAccessToken());
+  if (payload?.no) {
+    return Number(payload.no);
+  }
+
+  return null;
 }
 
 function saveFoundationAuth(authResponse) {
@@ -38,7 +75,7 @@ function buildAuthorizedHeaders() {
   const accessToken = getStoredAccessToken();
 
   if (!accessToken) {
-    throw new Error("먼저 기부단체 로그인 토큰을 저장해주세요.");
+    throw new Error("癒쇱? 湲곕??⑥껜 濡쒓렇???좏겙????ν빐二쇱꽭??");
   }
 
   return {
@@ -46,12 +83,25 @@ function buildAuthorizedHeaders() {
   };
 }
 
-function formatLocalDateTime(value) {
+async function requestWithFoundationAuth(path) {
+  const response = await fetch(path, {
+    headers: buildAuthorizedHeaders(),
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response));
+  }
+
+  return response.json();
+}
+
+function formatDateWithFixedTime(value, fixedTime) {
   if (!value) {
     return null;
   }
 
-  return `${value}:00`;
+  const dateOnly = String(value).split("T")[0];
+  return `${dateOnly}T${fixedTime}`;
 }
 
 export function getStoredFoundationAuth() {
@@ -108,7 +158,115 @@ export async function checkBeneficiary(entryCode) {
   return response.json();
 }
 
-export async function submitCampaignApplication(formValues) {
+export async function checkFoundationWalletAvailability() {
+  const foundationNo = getFoundationNoForGuard();
+
+  if (!foundationNo) {
+    throw new Error("기부단체 로그인 정보를 확인할 수 없습니다. 다시 로그인해주세요.");
+  }
+
+  const query = new URLSearchParams({
+    foundationNo: String(foundationNo),
+  });
+
+  const response = await fetch(
+    `${FOUNDATION_CAMPAIGN_BASE_PATH}/foundation-check?${query.toString()}`,
+    {
+      headers: buildAuthorizedHeaders(),
+    }
+  );
+
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response));
+  }
+
+  return response.json();
+}
+
+export async function fetchFoundationMyInfo() {
+  return requestWithFoundationAuth(`${FOUNDATION_BASE_PATH}/me`);
+}
+
+export async function fetchFoundationPublicDetail(foundationNo) {
+  const response = await fetch(`${FOUNDATION_BASE_PATH}/${foundationNo}`);
+
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response));
+  }
+
+  return response.json();
+}
+
+export async function fetchFoundationMyStats() {
+  return requestWithFoundationAuth(`${FOUNDATION_BASE_PATH}/me/stats`);
+}
+
+export async function updateFoundationMyInfo(formValues) {
+  const multipartData = new FormData();
+  const requestData = {
+    description: String(formValues.description || "").trim(),
+    contactPhone: String(formValues.contactPhone || "").trim(),
+    account: String(formValues.account || "").trim(),
+    bankName: String(formValues.bankName || "").trim(),
+    feeRate: Number(formValues.feeRate),
+  };
+
+  multipartData.append(
+    "data",
+    new Blob([JSON.stringify(requestData)], { type: "application/json" }),
+  );
+
+  if (formValues.profileImageFile) {
+    multipartData.append("profileImage", formValues.profileImageFile);
+  }
+
+  const response = await fetch(`${FOUNDATION_BASE_PATH}/me`, {
+    method: "PATCH",
+    headers: buildAuthorizedHeaders(),
+    body: multipartData,
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response));
+  }
+
+  return response.json();
+}
+
+export async function fetchFoundationRecentCampaigns({
+  campaignStatus,
+  keyword = "",
+  page = 0,
+  size = 2,
+} = {}) {
+  const query = new URLSearchParams({
+    page: String(page),
+    size: String(size),
+    keyword,
+  });
+
+  if (campaignStatus) {
+    query.set("campaignStatus", campaignStatus);
+  }
+
+  return requestWithFoundationAuth(
+    `${FOUNDATION_BASE_PATH}/me/campaigns/filter?${query.toString()}`
+  );
+}
+
+export async function fetchCampaignDetail(campaignNo) {
+  return requestWithFoundationAuth(
+    `${FOUNDATION_CAMPAIGN_BASE_PATH}/${campaignNo}/detail`
+  );
+}
+
+export async function fetchPendingCampaignEditDetail(campaignNo) {
+  return requestWithFoundationAuth(
+    `${FOUNDATION_CAMPAIGN_BASE_PATH}/${campaignNo}/edit-detail`
+  );
+}
+
+function buildCampaignMultipartData(formValues) {
   const multipartData = new FormData();
 
   const requestData = {
@@ -117,10 +275,10 @@ export async function submitCampaignApplication(formValues) {
     category: formValues.category,
     entryCode: formValues.entryCode.trim(),
     targetAmount: Number(formValues.targetAmount),
-    startAt: formatLocalDateTime(formValues.startAt),
-    endAt: formatLocalDateTime(formValues.endAt),
-    usageStartAt: formatLocalDateTime(formValues.usageStartAt),
-    usageEndAt: formatLocalDateTime(formValues.usageEndAt),
+    startAt: formatDateWithFixedTime(formValues.startAt, "00:00:00"),
+    endAt: formatDateWithFixedTime(formValues.endAt, "23:59:59"),
+    usageStartAt: formatDateWithFixedTime(formValues.usageStartAt, "00:00:00"),
+    usageEndAt: formatDateWithFixedTime(formValues.usageEndAt, "23:59:59"),
     usePlans: formValues.usePlans
       .map((plan) => ({
         planContent: plan.planContent.trim(),
@@ -144,8 +302,30 @@ export async function submitCampaignApplication(formValues) {
     }
   });
 
+  return multipartData;
+}
+
+export async function submitCampaignApplication(formValues) {
+  const multipartData = buildCampaignMultipartData(formValues);
+
   const response = await fetch(`${FOUNDATION_CAMPAIGN_BASE_PATH}/register`, {
     method: "POST",
+    headers: buildAuthorizedHeaders(),
+    body: multipartData,
+  });
+
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response));
+  }
+
+  return response.json();
+}
+
+export async function updatePendingCampaign(campaignNo, formValues) {
+  const multipartData = buildCampaignMultipartData(formValues);
+
+  const response = await fetch(`${FOUNDATION_CAMPAIGN_BASE_PATH}/${campaignNo}`, {
+    method: "PUT",
     headers: buildAuthorizedHeaders(),
     body: multipartData,
   });

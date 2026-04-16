@@ -1,4 +1,4 @@
-import { Link, Navigate, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import { Heart } from "lucide-react";
 import Navbar from "./components/Navbar";
 import Hero from "./components/Hero";
@@ -17,7 +17,14 @@ import NotFoundPage from "./pages/NotFoundPage";
 import OrganizationApplyPage from "./pages/OrganizationApplyPage";
 import TransparencyPage from "./pages/TransparencyPage";
 import ScrollToTop from "./components/ScrollToTop";
+import LoginPage from "../login/pages/LoginPage";
+import SignupPage from "../signUp/pages/SignupPage";
+import MyPageMain from "../myPageUser/pages/MyPageMain";
+import MyPageDonationHistory from "../myPageUser/pages/MyPageDonationHistory";
+import MyPagePasswordChange from "../myPageUser/pages/MyPagePasswordChange";
+import MyPageProfileEdit from "../myPageUser/pages/MyPageProfileEdit";
 import FoundationRegisterPage from "../foundation/pages/FoundationRegisterPage";
+import FoundationDashboardPage from "../foundation/pages/FoundationDashboardPage";
 
 function HomePage() {
   return (
@@ -69,10 +76,13 @@ function HomePage() {
 }
 
 export default function DonationApp() {
+  const location = useLocation();
+  const isFoundationRoute = location.pathname.startsWith("/foundation/");
+
   return (
     <div className="min-h-screen bg-surface selection:bg-primary selection:text-white">
       <ScrollToTop />
-      <Navbar />
+      {!isFoundationRoute ? <Navbar /> : null}
       <main>
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -101,15 +111,20 @@ export default function DonationApp() {
           <Route path="/mypage/history" element={<MyPageDonationHistory />} />
           <Route path="/mypage/password" element={<MyPagePasswordChange />} />
           <Route path="/mypage/profile" element={<MyPageProfileEdit />} />
-
-          <Route path="*" element={<NotFoundPage />} />
           <Route
             path="/foundation/register"
             element={<FoundationRegisterPage />}
           />
+          <Route path="/foundation/me" element={<FoundationDashboardPage />} />
+          <Route
+            path="/foundation/dashboard"
+            element={<Navigate to="/foundation/me" replace />}
+          />
+
+          <Route path="*" element={<NotFoundPage />} />
         </Routes>
       </main>
-      <Footer />
+      {!isFoundationRoute ? <Footer /> : null}
     </div>
   );
 }

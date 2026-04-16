@@ -1,4 +1,4 @@
-const CAMPAIGN_CATEGORY_OPTIONS = [
+﻿const CAMPAIGN_CATEGORY_OPTIONS = [
   { value: "", label: "카테고리 선택" },
   { value: "CHILD_YOUTH", label: "아동/청소년" },
   { value: "SENIOR", label: "어르신" },
@@ -25,18 +25,32 @@ function Field({ label, required, children, hint }) {
   );
 }
 
+function toImageSrc(path) {
+  if (!path) {
+    return "";
+  }
+
+  if (path.startsWith("http://") || path.startsWith("https://")) {
+    return path;
+  }
+
+  if (path.startsWith("/")) {
+    return path;
+  }
+
+  return `/${path}`;
+}
+
 export default function FoundationApplicationForm({
-  authForm,
-  authStatus,
-  authInfo,
   formValues,
   beneficiaryInfo,
   beneficiaryChecked,
   beneficiaryStatusMessage,
   submitting,
   errorMessage,
-  onAuthChange,
-  onLogin,
+  isEditMode,
+  existingRepresentativeImagePath,
+  existingDetailImagePaths,
   onChange,
   onFileChange,
   onDetailImageChange,
@@ -46,56 +60,24 @@ export default function FoundationApplicationForm({
   onAddDetailImage,
   onRemoveDetailImage,
   onBeneficiaryCheck,
+  onCancel,
   onSubmit,
 }) {
   return (
-    <form className="mx-auto flex max-w-3xl flex-col gap-8 px-4 py-10" onSubmit={onSubmit}>
+    <form className="mx-auto flex max-w-5xl flex-col gap-6 px-4 py-6" onSubmit={onSubmit}>
       <header className="space-y-2 text-center">
-        <p className="text-sm text-slate-500">새 캠페인 신청</p>
-        <h1 className="text-3xl font-semibold text-slate-900">기부단체 캠페인 등록</h1>
+        <p className="text-sm text-slate-500">{isEditMode ? "캠페인 정보 수정" : "새 캠페인 신청"}</p>
+        <h1 className="text-3xl font-semibold text-slate-900">
+          {isEditMode ? "기부단체 캠페인 수정" : "기부단체 캠페인 등록"}
+        </h1>
         <p className="text-sm text-slate-500">
-          토큰 저장 후 캠페인 데이터를 연결해 등록할 수 있는 화면입니다.
+          {isEditMode
+            ? "PENDING 상태 캠페인 정보를 수정하고 다시 제출하세요."
+            : "필수 정보를 입력하고 등록 요청을 진행하세요."}
         </p>
       </header>
 
-      <section className="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-100">
-        <SectionTitle>기부단체 로그인 토큰 저장</SectionTitle>
-        <div className="mt-4 grid gap-4 md:grid-cols-[1fr_1fr_auto]">
-          <Field label="이메일" required>
-            <input
-              name="email"
-              type="email"
-              value={authForm.email}
-              onChange={onAuthChange}
-              placeholder="been.dev.kim@gmail.com"
-            />
-          </Field>
-          <Field label="비밀번호" required>
-            <input
-              name="password"
-              type="password"
-              value={authForm.password}
-              onChange={onAuthChange}
-              placeholder="1234"
-            />
-          </Field>
-          <div className="flex items-end">
-            <button type="button" onClick={onLogin}>
-              로그인 요청 보내기
-            </button>
-          </div>
-        </div>
-        <div className="mt-3 space-y-1 text-sm text-slate-600">
-          <p>{authStatus}</p>
-          {authInfo ? (
-            <p>
-              저장된 계정: {authInfo.foundationName || "-"} / {authInfo.email || "-"}
-            </p>
-          ) : null}
-        </div>
-      </section>
-
-      <section className="space-y-4">
+      <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-5">
         <Field label="캠페인명" required>
           <input
             name="title"
@@ -107,20 +89,10 @@ export default function FoundationApplicationForm({
 
         <div className="grid gap-4 md:grid-cols-3">
           <Field label="모집 시작일" required>
-            <input
-              name="startAt"
-              type="datetime-local"
-              value={formValues.startAt}
-              onChange={onChange}
-            />
+            <input name="startAt" type="date" value={formValues.startAt} onChange={onChange} />
           </Field>
           <Field label="모집 종료일" required>
-            <input
-              name="endAt"
-              type="datetime-local"
-              value={formValues.endAt}
-              onChange={onChange}
-            />
+            <input name="endAt" type="date" value={formValues.endAt} onChange={onChange} />
           </Field>
           <Field label="기간 (일)">
             <input value={formValues.recruitDurationDays} readOnly />
@@ -131,7 +103,7 @@ export default function FoundationApplicationForm({
           <Field label="사업 시작일" required>
             <input
               name="usageStartAt"
-              type="datetime-local"
+              type="date"
               value={formValues.usageStartAt}
               onChange={onChange}
             />
@@ -139,7 +111,7 @@ export default function FoundationApplicationForm({
           <Field label="사업 종료일" required>
             <input
               name="usageEndAt"
-              type="datetime-local"
+              type="date"
               value={formValues.usageEndAt}
               onChange={onChange}
             />
@@ -177,30 +149,58 @@ export default function FoundationApplicationForm({
             rows="7"
             value={formValues.description}
             onChange={onChange}
-            placeholder="캠페인에 대한 상세한 설명을 작성해주세요. 이미지도 첨부할 수 있습니다."
+            placeholder="캠페인 설명과 목적을 작성해주세요."
           />
         </Field>
 
-        <Field label="대표 이미지" required>
-          <input
-            name="imageFile"
-            type="file"
-            accept="image/*"
-            onChange={onFileChange}
-          />
+        <Field label="대표 이미지" required={!isEditMode}>
+          {isEditMode && existingRepresentativeImagePath ? (
+            <div className="mb-2 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+              <img
+                src={toImageSrc(existingRepresentativeImagePath)}
+                alt="기존 대표 이미지"
+                className="h-40 w-full object-cover"
+              />
+            </div>
+          ) : null}
+          <input name="imageFile" type="file" accept="image/*" onChange={onFileChange} />
           <span className="text-sm text-slate-600">
-            {formValues.imageFile?.name || "선택된 대표 이미지가 없습니다."}
+            {formValues.imageFile?.name ||
+              (isEditMode
+                ? "기존 이미지를 유지하려면 선택하지 않아도 됩니다."
+                : "선택된 대표 이미지가 없습니다.")}
           </span>
         </Field>
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-5">
         <div className="flex items-center justify-between">
           <SectionTitle>상세 이미지</SectionTitle>
-          <button type="button" onClick={onAddDetailImage}>
+          <button
+            type="button"
+            className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+            onClick={onAddDetailImage}
+          >
             + 항목 추가
           </button>
         </div>
+
+        {isEditMode && existingDetailImagePaths?.length > 0 ? (
+          <div className="grid gap-3 md:grid-cols-3">
+            {existingDetailImagePaths.map((imagePath, index) => (
+              <div
+                key={`${imagePath}-${index}`}
+                className="overflow-hidden rounded-xl border border-slate-200 bg-slate-50"
+              >
+                <img
+                  src={toImageSrc(imagePath)}
+                  alt={`기존 상세 이미지 ${index + 1}`}
+                  className="h-32 w-full object-cover"
+                />
+              </div>
+            ))}
+          </div>
+        ) : null}
 
         <div className="space-y-3">
           {formValues.detailImageFiles.map((imageItem, index) => (
@@ -219,7 +219,11 @@ export default function FoundationApplicationForm({
                 </span>
               </Field>
               <div className="flex items-end">
-                <button type="button" onClick={() => onRemoveDetailImage(imageItem.id)}>
+                <button
+                  type="button"
+                  className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                  onClick={() => onRemoveDetailImage(imageItem.id)}
+                >
                   삭제
                 </button>
               </div>
@@ -228,10 +232,14 @@ export default function FoundationApplicationForm({
         </div>
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-5">
         <div className="flex items-center justify-between">
           <SectionTitle>지출 계획</SectionTitle>
-          <button type="button" onClick={onAddUsePlan}>
+          <button
+            type="button"
+            className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+            onClick={onAddUsePlan}
+          >
             + 항목 추가
           </button>
         </div>
@@ -245,9 +253,7 @@ export default function FoundationApplicationForm({
               <Field label={`지출 계획 ${index + 1}`} required>
                 <input
                   value={plan.planContent}
-                  onChange={(event) =>
-                    onUsePlanChange(plan.id, "planContent", event.target.value)
-                  }
+                  onChange={(event) => onUsePlanChange(plan.id, "planContent", event.target.value)}
                   placeholder="지출 내용 입력"
                 />
               </Field>
@@ -256,14 +262,16 @@ export default function FoundationApplicationForm({
                   type="number"
                   min="0"
                   value={plan.planAmount}
-                  onChange={(event) =>
-                    onUsePlanChange(plan.id, "planAmount", event.target.value)
-                  }
+                  onChange={(event) => onUsePlanChange(plan.id, "planAmount", event.target.value)}
                   placeholder="0"
                 />
               </Field>
               <div className="flex items-end">
-                <button type="button" onClick={() => onRemoveUsePlan(plan.id)}>
+                <button
+                  type="button"
+                  className="rounded-lg bg-slate-100 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-200"
+                  onClick={() => onRemoveUsePlan(plan.id)}
+                >
                   삭제
                 </button>
               </div>
@@ -272,10 +280,14 @@ export default function FoundationApplicationForm({
         </div>
       </section>
 
-      <section className="space-y-4">
+      <section className="space-y-4 rounded-3xl border border-slate-200 bg-white p-5">
         <div className="flex items-center justify-between">
           <SectionTitle>수혜자 확인</SectionTitle>
-          <button type="button" onClick={onBeneficiaryCheck}>
+          <button
+            type="button"
+            className="rounded-full bg-blue-500 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-600"
+            onClick={onBeneficiaryCheck}
+          >
             수혜자 확인
           </button>
         </div>
@@ -283,13 +295,13 @@ export default function FoundationApplicationForm({
         <Field
           label="엔트리 코드"
           required
-          hint="캠페인 등록 전 유효한 수혜자 코드인지 먼저 검증합니다."
+          hint="등록 전에 수혜자 코드가 유효한지 먼저 확인합니다."
         >
           <input
             name="entryCode"
             value={formValues.entryCode}
             onChange={onChange}
-            placeholder="지급받은 entry code를 입력하세요"
+            placeholder="entry code를 입력하세요"
           />
         </Field>
 
@@ -303,15 +315,11 @@ export default function FoundationApplicationForm({
               </div>
               <div>
                 <dt className="text-sm text-slate-500">수혜자 번호</dt>
-                <dd className="font-medium text-slate-900">
-                  {beneficiaryInfo.beneficiaryNo || "-"}
-                </dd>
+                <dd className="font-medium text-slate-900">{beneficiaryInfo.beneficiaryNo || "-"}</dd>
               </div>
               <div>
                 <dt className="text-sm text-slate-500">유형</dt>
-                <dd className="font-medium text-slate-900">
-                  {beneficiaryInfo.beneficiaryType || "-"}
-                </dd>
+                <dd className="font-medium text-slate-900">{beneficiaryInfo.beneficiaryType || "-"}</dd>
               </div>
               <div>
                 <dt className="text-sm text-slate-500">검증 상태</dt>
@@ -331,11 +339,19 @@ export default function FoundationApplicationForm({
       ) : null}
 
       <div className="flex justify-end gap-3">
-        <button type="button" onClick={() => window.location.reload()}>
+        <button
+          type="button"
+          className="rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50"
+          onClick={onCancel}
+        >
           취소
         </button>
-        <button type="submit" disabled={submitting}>
-          {submitting ? "신청 중..." : "신청 완료"}
+        <button
+          type="submit"
+          className="rounded-xl bg-blue-500 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-600 disabled:cursor-not-allowed disabled:opacity-50"
+          disabled={submitting}
+        >
+          {submitting ? (isEditMode ? "수정 중..." : "신청 중...") : isEditMode ? "수정 완료" : "신청 완료"}
         </button>
       </div>
     </form>

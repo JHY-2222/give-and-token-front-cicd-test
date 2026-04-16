@@ -1,11 +1,15 @@
-import { useState } from "react";
+﻿import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import FoundationApplicationForm from "../components/FoundationApplicationForm";
 import FoundationApplicationResult from "../components/FoundationApplicationResult";
 import {
   checkBeneficiary,
+  checkFoundationWalletAvailability,
+  fetchPendingCampaignEditDetail,
   getStoredFoundationAuth,
-  loginFoundationAccount,
   submitCampaignApplication,
+  updatePendingCampaign,
 } from "../api/foundationApi";
 
 function createUsePlan() {
@@ -22,11 +26,6 @@ function createDetailImageItem() {
     file: null,
   };
 }
-
-const INITIAL_AUTH_FORM = {
-  email: "been.dev.kim@gmail.com",
-  password: "1234",
-};
 
 const INITIAL_FORM_VALUES = {
   title: "",
@@ -67,51 +66,138 @@ function calculateDurationLabel(startValue, endValue) {
 }
 
 export default function FoundationRegisterPage() {
-  const initialAuthInfo = getStoredFoundationAuth();
-  const [authForm, setAuthForm] = useState(INITIAL_AUTH_FORM);
-  const [authInfo, setAuthInfo] = useState(initialAuthInfo);
-  const [authStatus, setAuthStatus] = useState(
-    initialAuthInfo
-      ? "저장된 기부단체 로그인 토큰이 있습니다."
-      : "로그인 요청을 보내 토큰을 로컬 스토리지에 저장해주세요."
-  );
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const authInfo = getStoredFoundationAuth();
+
+  const editCampaignNo = useMemo(() => {
+    const raw = searchParams.get("editCampaignNo");
+    const parsed = Number(raw);
+    return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+  }, [searchParams]);
+
+  const isEditMode = editCampaignNo !== null;
+
+  const [accessChecked, setAccessChecked] = useState(false);
   const [formValues, setFormValues] = useState(INITIAL_FORM_VALUES);
+  const [existingRepresentativeImagePath, setExistingRepresentativeImagePath] = useState("");
+  const [existingDetailImagePaths, setExistingDetailImagePaths] = useState([]);
   const [beneficiaryInfo, setBeneficiaryInfo] = useState(null);
   const [beneficiaryChecked, setBeneficiaryChecked] = useState(false);
   const [beneficiaryStatusMessage, setBeneficiaryStatusMessage] = useState(
-    "엔트리 코드를 입력하고 수혜자 확인을 진행해주세요."
+    "엔트리 코드를 입력하고 수혜자 확인을 진행해주세요.",
   );
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [submitResult, setSubmitResult] = useState(null);
 
-  const handleAuthChange = (event) => {
-    const { name, value } = event.target;
+  useEffect(() => {
+    let mounted = true;
 
-    setAuthForm((previousValues) => ({
-      ...previousValues,
-      [name]: value,
-    }));
-  };
+    const guardAccess = async () => {
+      if (isEditMode) {
+        setAccessChecked(true);
+        return;
+      }
 
-  const handleLogin = async () => {
-    try {
-      setErrorMessage("");
-      setAuthStatus("로그인 요청을 보내는 중입니다...");
+      try {
+        const result = await checkFoundationWalletAvailability();
 
-      const result = await loginFoundationAccount(authForm);
-      setAuthInfo({
-        foundationNo: result.foundationNo,
-        foundationName: result.foundationName,
-        email: result.email,
-        tokenType: result.tokenType,
-      });
-      setAuthStatus("토큰 저장이 완료되었습니다. 이제 캠페인을 신청할 수 있습니다.");
-    } catch (error) {
-      setAuthStatus("로그인 요청에 실패했습니다.");
-      setErrorMessage(error.message);
+        if (!mounted) {
+          return;
+        }
+
+        if (!result.hasAvailableWallet) {
+          window.alert("등록 가능한 캠페인은 3개 입니다.");
+          navigate("/foundation/me", { replace: true });
+          return;
+        }
+
+        setAccessChecked(true);
+      } catch (error) {
+        if (!mounted) {
+          return;
+        }
+
+        window.alert(error.message || "기부단체 정보 확인에 실패했습니다.");
+        navigate("/login", { replace: true });
+      }
+    };
+
+    guardAccess();
+
+    return () => {
+      mounted = false;
+    };
+  }, [isEditMode, navigate]);
+
+  useEffect(() => {
+    let mounted = true;
+
+    if (!isEditMode || !accessChecked) {
+      return () => {
+        mounted = false;
+      };
     }
-  };
+
+    const loadEditDetail = async () => {
+      try {
+        const detail = await fetchPendingCampaignEditDetail(editCampaignNo);
+        if (!mounted) {
+          return;
+        }
+
+        setFormValues((previousValues) => ({
+          ...previousValues,
+          title: detail.title || "",
+          startAt: detail.startAt ? String(detail.startAt).slice(0, 10) : "",
+          endAt: detail.endAt ? String(detail.endAt).slice(0, 10) : "",
+          usageStartAt: detail.usageStartAt ? String(detail.usageStartAt).slice(0, 10) : "",
+          usageEndAt: detail.usageEndAt ? String(detail.usageEndAt).slice(0, 10) : "",
+          recruitDurationDays: calculateDurationLabel(
+            detail.startAt ? String(detail.startAt).slice(0, 10) : "",
+            detail.endAt ? String(detail.endAt).slice(0, 10) : "",
+          ),
+          usageDurationDays: calculateDurationLabel(
+            detail.usageStartAt ? String(detail.usageStartAt).slice(0, 10) : "",
+            detail.usageEndAt ? String(detail.usageEndAt).slice(0, 10) : "",
+          ),
+          targetAmount: String(detail.targetAmount ?? "0"),
+          category: detail.categoryCode || "",
+          description: detail.description || "",
+          imageFile: null,
+          entryCode: detail.entryCode || "",
+          usePlans:
+            detail.usePlans?.length > 0
+              ? detail.usePlans.map((plan) => ({
+                  id: `${Date.now()}-${Math.random()}`,
+                  planContent: plan.planContent || "",
+                  planAmount: String(plan.planAmount ?? 0),
+                }))
+              : [createUsePlan()],
+          detailImageFiles: [createDetailImageItem()],
+        }));
+        setExistingRepresentativeImagePath(detail.representativeImagePath || "");
+        setExistingDetailImagePaths(
+          Array.isArray(detail.detailImagePaths) ? detail.detailImagePaths.filter(Boolean) : [],
+        );
+
+        setBeneficiaryChecked(Boolean(detail.entryCode));
+        setBeneficiaryStatusMessage("수정 모드입니다. 필요 시 수혜자 확인을 다시 진행하세요.");
+      } catch (error) {
+        if (!mounted) {
+          return;
+        }
+        setErrorMessage(error.message || "수정할 캠페인 정보를 불러오지 못했습니다.");
+      }
+    };
+
+    loadEditDetail();
+
+    return () => {
+      mounted = false;
+    };
+  }, [accessChecked, editCampaignNo, isEditMode]);
 
   const handleChange = (event) => {
     const { name, value } = event.target;
@@ -125,14 +211,14 @@ export default function FoundationRegisterPage() {
       if (name === "startAt" || name === "endAt") {
         nextValues.recruitDurationDays = calculateDurationLabel(
           name === "startAt" ? value : nextValues.startAt,
-          name === "endAt" ? value : nextValues.endAt
+          name === "endAt" ? value : nextValues.endAt,
         );
       }
 
       if (name === "usageStartAt" || name === "usageEndAt") {
         nextValues.usageDurationDays = calculateDurationLabel(
           name === "usageStartAt" ? value : nextValues.usageStartAt,
-          name === "usageEndAt" ? value : nextValues.usageEndAt
+          name === "usageEndAt" ? value : nextValues.usageEndAt,
         );
       }
 
@@ -165,7 +251,7 @@ export default function FoundationRegisterPage() {
     setFormValues((previousValues) => ({
       ...previousValues,
       detailImageFiles: previousValues.detailImageFiles.map((imageItem) =>
-        imageItem.id === itemId ? { ...imageItem, file: nextFile } : imageItem
+        imageItem.id === itemId ? { ...imageItem, file: nextFile } : imageItem,
       ),
     }));
   };
@@ -191,7 +277,7 @@ export default function FoundationRegisterPage() {
     setFormValues((previousValues) => ({
       ...previousValues,
       usePlans: previousValues.usePlans.map((plan) =>
-        plan.id === planId ? { ...plan, [key]: value } : plan
+        plan.id === planId ? { ...plan, [key]: value } : plan,
       ),
     }));
   };
@@ -244,10 +330,6 @@ export default function FoundationRegisterPage() {
   };
 
   const validateBeforeSubmit = () => {
-    if (!authInfo) {
-      return "먼저 기부단체 로그인 토큰을 저장해주세요.";
-    }
-
     if (isEmpty(formValues.title)) {
       return "캠페인명을 입력해주세요.";
     }
@@ -284,12 +366,12 @@ export default function FoundationRegisterPage() {
       return "수혜자 확인을 먼저 완료해주세요.";
     }
 
-    if (!formValues.imageFile) {
+    if (!isEditMode && !formValues.imageFile) {
       return "대표 이미지를 등록해주세요.";
     }
 
     const hasInvalidUsePlan = formValues.usePlans.some(
-      (plan) => isEmpty(plan.planContent) || Number(plan.planAmount) < 0
+      (plan) => isEmpty(plan.planContent) || Number(plan.planAmount) < 0,
     );
 
     if (hasInvalidUsePlan) {
@@ -313,10 +395,14 @@ export default function FoundationRegisterPage() {
       setSubmitting(true);
       setErrorMessage("");
 
-      const result = await submitCampaignApplication({
+      const payload = {
         ...formValues,
         detailImageFiles: formValues.detailImageFiles.map((imageItem) => imageItem.file),
-      });
+      };
+
+      const result = isEditMode
+        ? await updatePendingCampaign(editCampaignNo, payload)
+        : await submitCampaignApplication(payload);
       setSubmitResult(result);
     } catch (error) {
       setErrorMessage(error.message);
@@ -325,35 +411,61 @@ export default function FoundationRegisterPage() {
     }
   };
 
+  const handleCancel = () => {
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/foundation/me");
+  };
+
   if (submitResult) {
     return <FoundationApplicationResult result={submitResult} authInfo={authInfo} />;
   }
 
+  if (!accessChecked) {
+    return null;
+  }
+
   return (
-    <main className="px-4 py-10">
-      <FoundationApplicationForm
-        authForm={authForm}
-        authStatus={authStatus}
-        authInfo={authInfo}
-        formValues={formValues}
-        beneficiaryInfo={beneficiaryInfo}
-        beneficiaryChecked={beneficiaryChecked}
-        beneficiaryStatusMessage={beneficiaryStatusMessage}
-        submitting={submitting}
-        errorMessage={errorMessage}
-        onAuthChange={handleAuthChange}
-        onLogin={handleLogin}
-        onChange={handleChange}
-        onFileChange={handleFileChange}
-        onDetailImageChange={handleDetailImageChange}
-        onAddUsePlan={handleAddUsePlan}
-        onRemoveUsePlan={handleRemoveUsePlan}
-        onUsePlanChange={handleUsePlanChange}
-        onAddDetailImage={handleAddDetailImage}
-        onRemoveDetailImage={handleRemoveDetailImage}
-        onBeneficiaryCheck={handleBeneficiaryCheck}
-        onSubmit={handleSubmit}
-      />
+    <main className="min-h-screen bg-[#f2f4f7] px-4 py-4 text-slate-900">
+      <div className="mx-auto max-w-[1320px] space-y-4">
+        <header className="rounded-[28px] bg-white px-6 py-4">
+          <button
+            type="button"
+            className="inline-flex items-center gap-2 rounded-xl px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-100"
+            onClick={() => navigate("/foundation/me")}
+          >
+            <ArrowLeft size={16} />
+            뒤로가기
+          </button>
+        </header>
+
+        <section className="rounded-[28px] bg-white p-2 md:p-4">
+          <FoundationApplicationForm
+            formValues={formValues}
+            beneficiaryInfo={beneficiaryInfo}
+            beneficiaryChecked={beneficiaryChecked}
+            beneficiaryStatusMessage={beneficiaryStatusMessage}
+            submitting={submitting}
+            errorMessage={errorMessage}
+            onChange={handleChange}
+            onFileChange={handleFileChange}
+            onDetailImageChange={handleDetailImageChange}
+            onAddUsePlan={handleAddUsePlan}
+            onRemoveUsePlan={handleRemoveUsePlan}
+            onUsePlanChange={handleUsePlanChange}
+            onAddDetailImage={handleAddDetailImage}
+            onRemoveDetailImage={handleRemoveDetailImage}
+            onBeneficiaryCheck={handleBeneficiaryCheck}
+            onCancel={handleCancel}
+            isEditMode={isEditMode}
+            existingRepresentativeImagePath={existingRepresentativeImagePath}
+            existingDetailImagePaths={existingDetailImagePaths}
+            onSubmit={handleSubmit}
+          />
+        </section>
+      </div>
     </main>
   );
 }
