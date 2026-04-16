@@ -10,6 +10,11 @@ export default defineConfig({
         target: "http://localhost:8090",
         changeOrigin: true
       },
+      "/admin": {
+        target: "http://localhost:8090",
+        changeOrigin: true
+      }
+      },
       '/oauth2': {
         target: 'http://localhost:8090', // 👈 여기도 8090이어야 합니다!
         changeOrigin: true,

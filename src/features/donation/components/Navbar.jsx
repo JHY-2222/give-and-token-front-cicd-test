@@ -79,6 +79,7 @@ export default function Navbar() {
             </Link>
           </div>
 
+          {/*가빈- 알림 버튼 추가*/}
           <div className="flex items-center gap-4">
             {isLoggedIn ? (
               <div className="flex items-center gap-2">
