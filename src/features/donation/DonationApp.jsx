@@ -32,7 +32,7 @@ import FoundationListPage from "../foundation/pages/FoundationListPage";
 import FoundationSignupPage from "../foundation/pages/FoundationSignupPage";
 import FoundationSignupCompletePage from "../foundation/pages/FoundationSignupCompletePage";
 import BeneficiaryMainPage from "../beneficiary/pages/BeneficiaryMainPage";
-
+import MyPageLayout from '../myPageUser/pages/MyPageLayout';
 function HomePage() {
   useEffect(() => {
     document.documentElement.classList.add("home-scroll-snap");
@@ -202,9 +202,13 @@ export default function DonationApp() {
 
           {/* 마이페이지 */}
           <Route path="/mypage" element={<MyPageMain />} />
-          <Route path="/mypage/profile" element={<MyPageProfileEdit />} />
-          <Route path="/mypage/history" element={<MyPageDonationHistory />} />
-          <Route path="/mypage/password" element={<MyPagePasswordChange />} />
+         <Route path="/mypage" element={<MyPageLayout />}>
+            <Route index element={<MyPageMain />} />
+            <Route path="profile-edit" element={<MyPageProfileEdit />} />
+            <Route path="donation-history" element={<MyPageDonationHistory />} />
+            <Route path="password-change" element={<MyPagePasswordChange />} />
+          </Route>
+
 
           <Route path="/foundation/me" element={<FoundationDashboardPage />} />
           <Route path="/foundation/register" element={<FoundationRegisterPage />} />
