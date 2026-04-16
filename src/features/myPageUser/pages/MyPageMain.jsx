@@ -4,6 +4,7 @@ import ProfileCard from "../components/ProfileCardPage";
 import WalletCard from "../components/MyWalletCard";
 import DonationSummaryCard from "../components/MyDonationSummaryCard";
 import DonationHistorySection from "../components/DonationHistorySection";
+import "../styles/MyPage.css";
 import {
   getMyPageInfo,
   getTransactionHistory,
@@ -30,15 +31,14 @@ export default function MyPageMain() {
   useEffect(() => {
     // 1. 로그인 여부 즉시 확인
     if (!getIsLoggedIn()) {
-      alert("로그인이 필요한 페이지입니다.");
+      alert("로그아웃되었습니다. 다시 로그인해주세요.");
       navigate("/login", { replace: true });
       return;
     }
-    
+
     // 2. 데이터 불러오기
     fetchMyPageData();
   }, [navigate]);
-
   const fetchMyPageData = async () => {
     try {
       setLoading(true);
@@ -76,37 +76,65 @@ export default function MyPageMain() {
   }, [transactionList]);
 
   if (loading) {
-    return <div>로딩 중...</div>;
+    return <div className="min-h-screen flex items-center justify-center font-display text-xl text-ink">로딩 중...</div>;
   }
 
   if (error) {
-    return <div>{error}</div>;
+    return <div className="min-h-screen flex items-center justify-center font-display text-xl text-ink">{error}</div>;
   }
 
   return (
     <div className="mypage-main-page">
-      <h1>마이페이지</h1>
+      <div className="flex flex-col lg:flex-row gap-16">
+        {/* 좌측 사이드바: 프로필 정보 */}
+        <aside className="w-full lg:w-80 shrink-0">
+          <div className="lg:sticky lg:top-48 h-full">
+            <ProfileCard
+              myInfo={myInfo}
+              onEditProfile={() => navigate("/mypage/profile")}
+              onChangePassword={() => navigate("/mypage/password")}
+              onViewDonations={() => navigate("/mypage/history")}
+            />
+          </div>
+        </aside>
 
-      <section className="mypage-main-top">
-        <ProfileCard
-          myInfo={myInfo}
-          onEditProfile={() => navigate("/mypage/profile/edit")}
-          onChangePassword={() => navigate("/mypage/password/change")}
-          onViewDonations={() => navigate("/mypage/donations")}
-        />
+        {/* 우측 메인 콘텐츠 영역 */}
+        <div className="flex-1 min-w-0 space-y-12">
+          {/* 제목: 대폭 강화 (4xl -> 5xl급) */}
+          <header className="mb-12 relative">
+            <div className="absolute -left-8 top-1/2 -translate-y-1/2 w-1.5 h-16 bg-primary rounded-full hidden lg:block" />
+            <div className="flex items-center gap-3 mb-2">
+              <span className="px-3 py-1 rounded-full bg-orange-100 text-primary text-[10px] font-black uppercase tracking-widest">
+                Member Dashboard
+              </span>
+            </div>
+            <h1 className="text-5xl font-black text-ink tracking-tight !mb-0 !text-left">
+              반가워요, <span className="text-primary">{myInfo?.name || "사용자"}</span>님!
+            </h1>
+            <p className="text-ink/40 mt-4 text-lg font-medium">
+              오늘도 따뜻한 마음을 나눠주셔서 감사합니다.
+            </p>
+          </header>
 
-        <div className="mypage-main-side">
-          <WalletCard walletInfo={walletInfo} />
-          <DonationSummaryCard summary={summary} />
+          {/* 1단: 지갑 정보 (상단 배치) */}
+          <div className="w-full">
+            <WalletCard walletInfo={walletInfo} />
+          </div>
+
+          {/* 2단: 요약(좌) & 기부내역(우) */}
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-8 items-stretch">
+            <div className="xl:col-span-4">
+              <DonationSummaryCard summary={summary} />
+            </div>
+            <div className="xl:col-span-8">
+              <DonationHistorySection
+                donationHistory={transactionList}
+                onViewAll={() => navigate("/mypage/history")}
+              />
+            </div>
+          </div>
         </div>
-      </section>
-
-      <section className="mypage-main-bottom">
-        <DonationHistorySection
-          donationHistory={transactionList}
-          onViewAll={() => navigate("/mypage/donations")}
-        />
-      </section>
+      </div>
     </div>
   );
 }

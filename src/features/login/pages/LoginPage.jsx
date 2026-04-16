@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { AnimatePresence } from "motion/react";
 import LoginRoleSelector from "../components/LoginRoleSelector";
 import LoginForm from "../components/LoginForm";
 import LoginLinks from "../components/LoginLinks";
@@ -138,13 +139,15 @@ const LoginPage = () => {
           </>
         )}
 
-        {isEmailFindOpen && (
-          <EmailFindModal onClose={() => setIsEmailFindOpen(false)} />
-        )}
+        <AnimatePresence>
+          {isEmailFindOpen && (
+            <EmailFindModal onClose={() => setIsEmailFindOpen(false)} />
+          )}
 
-        {isPasswordResetOpen && (
-          <PasswordResetModal onClose={() => setIsPasswordResetOpen(false)} />
-        )}
+          {isPasswordResetOpen && (
+            <PasswordResetModal onClose={() => setIsPasswordResetOpen(false)} />
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
