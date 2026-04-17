@@ -1,0 +1,141 @@
+.admin-login-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #f5f8ff 0%, #eef4ff 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px 16px;
+}
+
+.admin-login-shell {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: center;
+}
+
+.admin-login-card {
+  width: min(100%, 360px);
+  background: #fff;
+  border-radius: 8px;
+  padding: 28px 24px 24px;
+  border: 1px solid #dbe4f0;
+}
+
+.admin-login-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: 22px;
+}
+
+.admin-login-brand__badge {
+  min-width: 92px;
+  height: 46px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #2563eb;
+  color: #fff;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.admin-login-brand h1 {
+  margin: 14px 0 6px;
+  color: #1e293b;
+  font-size: 28px;
+  font-weight: 900;
+  line-height: 1.15;
+}
+
+.admin-login-brand p {
+  margin: 0;
+  color: #6b7a94;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-login-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.admin-login-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.admin-login-field span {
+  color: #7b8ba5;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+
+.admin-login-field input {
+  width: 100%;
+  height: 44px;
+  border: 1px solid #dbe4f0;
+  border-radius: 6px;
+  background: #f8fbff;
+  padding: 0 12px;
+  color: #1e293b;
+  font-size: 14px;
+  font-weight: 700;
+  outline: none;
+}
+
+.admin-login-field input::placeholder {
+  color: #94a3b8;
+}
+
+.admin-login-submit {
+  margin-top: 6px;
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 6px;
+  background: #2563eb;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-login-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.admin-login-submit:hover {
+  background: #1d4ed8;
+}
+
+.admin-login-error {
+  margin: -2px 0 0;
+  color: #dc2626;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+@media (max-width: 640px) {
+  .admin-login-page {
+    padding: 16px 12px;
+  }
+
+  .admin-login-card {
+    border-radius: 8px;
+    padding: 22px 16px 18px;
+  }
+
+  .admin-login-brand h1 {
+    font-size: 24px;
+  }
+}

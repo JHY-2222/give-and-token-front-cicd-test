@@ -10,9 +10,10 @@ export default defineConfig({
         target: "http://localhost:8090",
         changeOrigin: true,
       },
-      "/admin": {
+      "/admin-api": {
         target: "http://localhost:8090",
         changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/admin-api/, "/admin"),
       },
       "/oauth2": {
         target: "http://localhost:8090",
