@@ -3,7 +3,7 @@ import ModalLayout from "./ModalLayout";
 import { findEmail } from "../api/authApi";
 import { User, Phone, Mail, Search, ArrowRight, RefreshCw, LogIn } from "lucide-react";
 
-export default function EmailFindModal({ onClose }) {
+export default function EmailFindModal({ role, onClose }) {
   const [form, setForm] = useState({
     name: "",
     phone: "",
@@ -22,8 +22,9 @@ export default function EmailFindModal({ onClose }) {
   };
 
   const handleFindEmail = async () => {
+    const nameLabel = role === "foundation" ? "단체명" : "이름";
     if (!form.name.trim()) {
-      alert("이름을 입력해주세요.");
+      alert(`${nameLabel}을 입력해주세요.`);
       return;
     }
     if (!form.phone.trim()) {
@@ -36,7 +37,7 @@ export default function EmailFindModal({ onClose }) {
       setMessage("");
       setResultEmail("");
 
-      const response = await findEmail({
+      const response = await findEmail(role, {
         name: form.name,
         phone: form.phone,
       });
@@ -69,14 +70,16 @@ export default function EmailFindModal({ onClose }) {
                 <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex gap-3 items-start">
                   <Search className="text-primary mt-1 shrink-0" size={18} />
                   <p className="text-sm text-slate-500 leading-relaxed">
-                    가입 시 등록한 이름과 전화번호를 입력하시면<br />
+                    가입 시 등록한 {role === "foundation" ? "단체명" : "이름"}과 전화번호를 입력하시면<br />
                     등록된 이메일 주소의 일부를 확인하실 수 있습니다.
                   </p>
                 </div>
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">이름</label>
+                    <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
+                      {role === "foundation" ? "단체명" : "이름"}
+                    </label>
                     <div className="relative group">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" size={20} />
                       <input
@@ -84,7 +87,7 @@ export default function EmailFindModal({ onClose }) {
                           name="name"
                           value={form.name}
                           onChange={handleChange}
-                          placeholder="성함 입력"
+                          placeholder={role === "foundation" ? "단체명 입력" : "성함 입력"}
                           className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary focus:bg-white focus:outline-none transition-all text-slate-700 font-medium"
                           disabled={searching}
                       />

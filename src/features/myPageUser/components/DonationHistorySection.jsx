@@ -54,7 +54,7 @@ export default function DonationHistorySection({
                 <div className="flex items-center justify-center md:justify-start gap-3">
                   <span className="flex items-center gap-1 text-[11px] font-bold text-stone-400 bg-surface px-2 py-1 rounded-md border border-line">
                     <Calendar size={12} />
-                    {formatDate(item.transaction?.sentAt || item.transaction?.createdAt)}
+                    {formatDate(item.transaction?.sentAt || item.transaction?.createdAt || item.donatedAt)}
                   </span>
                   <span className="text-[11px] font-bold text-stone-300 uppercase tracking-tighter">#ID-{item.campaignNo}</span>
                 </div>
@@ -76,7 +76,7 @@ export default function DonationHistorySection({
                     • {item.transaction?.status ?? "PENDING"}
                   </span>
                   <p className="text-2xl font-black text-ink">
-                    {formatAmount(item.transaction?.amount)}
+                    {formatAmount(item.priceamount)}
                   </p>
                 </div>
                 {item.transaction?.txHash && (
