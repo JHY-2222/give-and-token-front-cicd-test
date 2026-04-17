@@ -84,6 +84,13 @@ function saveFoundationAuth(authResponse) {
   );
 }
 
+export function clearFoundationAuth() {
+  window.localStorage.removeItem(FOUNDATION_AUTH_STORAGE_KEY);
+  window.localStorage.removeItem(FOUNDATION_INFO_STORAGE_KEY);
+  window.localStorage.removeItem("accessToken");
+  window.localStorage.removeItem("userRole");
+}
+
 function buildAuthorizedHeaders() {
   const accessToken = getStoredAccessToken();
 
@@ -150,6 +157,23 @@ export async function loginFoundationAccount({ email, password }) {
   const data = await response.json();
   saveFoundationAuth(data);
   return data;
+}
+
+export async function logoutFoundationAccount() {
+  const accessToken = getStoredAccessToken();
+
+  try {
+    if (accessToken) {
+      await fetch(`${FOUNDATION_BASE_PATH}/logout`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+    }
+  } finally {
+    clearFoundationAuth();
+  }
 }
 
 export async function checkBeneficiary(entryCode) {
@@ -339,6 +363,18 @@ export async function fetchCampaignDetail(campaignNo) {
   );
 }
 
+export async function fetchCampaignDetailPublic(campaignNo) {
+  const response = await fetch(
+    `${FOUNDATION_CAMPAIGN_BASE_PATH}/${campaignNo}/detail`,
+  );
+
+  if (!response.ok) {
+    throw new Error(await parseErrorResponse(response));
+  }
+
+  return response.json();
+}
+
 export async function fetchPendingCampaignEditDetail(campaignNo) {
   return requestWithFoundationAuth(
     `${FOUNDATION_CAMPAIGN_BASE_PATH}/${campaignNo}/edit-detail`,
@@ -364,6 +400,11 @@ function buildCampaignMultipartData(formValues) {
         planAmount: Number(plan.planAmount),
       }))
       .filter((plan) => plan.planContent && !Number.isNaN(plan.planAmount)),
+    deletedDetailImageNos: Array.isArray(formValues.deletedDetailImageNos)
+      ? formValues.deletedDetailImageNos
+          .map((imageNo) => Number(imageNo))
+          .filter((imageNo) => Number.isFinite(imageNo) && imageNo > 0)
+      : [],
   };
 
   multipartData.append(
