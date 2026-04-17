@@ -1,0 +1,311 @@
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { User, Camera, Check, AlertCircle, ArrowLeft } from "lucide-react";
+import "../styles/MyPage.css";
+import {
+  checkNicknameDuplicate,
+  getMyPageInfo,
+  updateMyPageInfo,
+} from "../api/mypageApi";
+
+export default function MyPageProfileEdit() {
+  const navigate = useNavigate();
+
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+
+  const [form, setForm] = useState({
+    email: "",
+    name: "",
+    phone: "",
+    nameHash: "",
+    profilePath: "",
+  });
+
+  const [previewImage, setPreviewImage] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+
+  const [originalNickname, setOriginalNickname] = useState("");
+  const [nicknameChecked, setNicknameChecked] = useState(false);
+  const [nicknameMessage, setNicknameMessage] = useState("");
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    fetchMyInfo();
+  }, []);
+
+  // 이미지 서버 기본 주소 (분석 결과 반영)
+  const IMAGE_BASE_URL = "http://localhost:8090/uploads/";
+
+  const fetchMyInfo = async () => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const response = await getMyPageInfo();
+      const data = response.data;
+
+      setForm({
+        email: data.email ?? "",
+        name: data.name ?? "",
+        phone: data.phone ?? "",
+        nameHash: data.nameHash ?? "",
+        profilePath: data.profilePath ?? "",
+      });
+
+      setOriginalNickname(data.nameHash ?? "");
+      
+      // 분석 결과 반영: profilePath가 있으면 서버 주소를 붙여서 미리보기 설정
+      if (data.profilePath) {
+        // 이미 전체 URL인 경우(S3 등)와 파일명만 온 경우를 구분
+        const fullPath = data.profilePath.startsWith('http') 
+          ? data.profilePath 
+          : `${IMAGE_BASE_URL}${data.profilePath}`;
+        setPreviewImage(fullPath);
+      }
+      
+      setNicknameChecked(true);
+      setNicknameMessage("현재 사용 중인 닉네임입니다.");
+    } catch (err) {
+      console.error(err);
+      setError("내 정보를 불러오지 못했습니다.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNicknameChange = (e) => {
+    const value = e.target.value;
+
+    setForm((prev) => ({
+      ...prev,
+      nameHash: value,
+    }));
+
+    if (value === originalNickname) {
+      setNicknameChecked(true);
+      setNicknameMessage("현재 사용 중인 닉네임입니다.");
+      return;
+    }
+
+    setNicknameChecked(false);
+    setNicknameMessage("");
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0] ?? null;
+    setSelectedFile(file);
+
+    if (file) {
+      const objectUrl = URL.createObjectURL(file);
+      setPreviewImage(objectUrl);
+    }
+  };
+
+  const handleNicknameCheck = async () => {
+    try {
+      if (!form.nameHash.trim()) {
+        setNicknameChecked(false);
+        setNicknameMessage("닉네임을 입력해주세요.");
+        return;
+      }
+
+      if (form.nameHash === originalNickname) {
+        setNicknameChecked(true);
+        setNicknameMessage("현재 사용 중인 닉네임입니다.");
+        return;
+      }
+
+      const response = await checkNicknameDuplicate(form.nameHash);
+      const data = response.data;
+
+      const isAvailable =
+        data?.available === true ||
+        data?.duplicated === false ||
+        data === true;
+
+      if (isAvailable) {
+        setNicknameChecked(true);
+        setNicknameMessage("사용 가능한 닉네임입니다.");
+      } else {
+        setNicknameChecked(false);
+        setNicknameMessage("이미 사용 중인 닉네임입니다.");
+      }
+    } catch (err) {
+      console.error(err);
+      setNicknameChecked(false);
+      setNicknameMessage("닉네임 중복 확인에 실패했습니다.");
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      setSubmitting(true);
+      setError("");
+
+      if (!form.nameHash.trim()) {
+        setError("닉네임을 입력해주세요.");
+        return;
+      }
+
+      if (form.nameHash !== originalNickname && !nicknameChecked) {
+        setError("닉네임 중복 확인을 먼저 해주세요.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("nameHash", form.nameHash);
+
+      if (selectedFile) {
+        formData.append("profileImage", selectedFile);
+      }
+
+      await updateMyPageInfo(formData);
+
+      alert("정보 수정이 완료되었습니다.");
+      navigate("/mypage");
+    } catch (err) {
+      console.error(err);
+
+      const message =
+        err?.response?.data?.message ||
+        err?.response?.data ||
+        "정보 수정에 실패했습니다.";
+
+      setError(message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center font-display text-xl text-ink">불러오는 중...</div>;
+  }
+
+  return (
+    <div className="mypage-main-page">
+      <div className="max-w-2xl mx-auto">
+        <header className="flex items-center gap-4 mb-12">
+          <button 
+            type="button"
+            className="btn-back-circle"
+            onClick={() => navigate("/mypage")}
+          >
+            <ArrowLeft size={24} />
+          </button>
+          <h1 className="!mb-0 text-3xl font-bold text-ink">나의 정보 수정</h1>
+        </header>
+
+        <section className="mypage-card">
+          {error && (
+            <div className="mb-6 p-4 bg-red-50 text-red-600 rounded-2xl flex items-center gap-2 text-sm font-medium border border-red-100">
+              <AlertCircle size={18} />
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-8">
+            <div className="flex flex-col items-center gap-4">
+              <div className="profile-image-container group relative">
+                {previewImage ? (
+                  <img 
+                    src={previewImage} 
+                    alt="프로필 미리보기" 
+                    className="profile-image"
+                  />
+                ) : (
+                  <div className="profile-image flex items-center justify-center bg-stone-100">
+                    <User size={64} className="text-stone-300" />
+                  </div>
+                )}
+                <label className="absolute -bottom-1 -right-1 p-2.5 bg-primary text-white rounded-full cursor-pointer shadow-lg hover:scale-110 transition-all border-4 border-white">
+                  <Camera size={18} />
+                  <input type="file" className="hidden" accept="image/*" onChange={handleFileChange} />
+                </label>
+              </div>
+              <p className="card-label-clean !mb-0">프로필 사진 변경</p>
+            </div>
+
+            <div className="grid gap-6">
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-bold text-ink/60 uppercase tracking-wider ml-1">닉네임</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    className="flex-1 px-5 py-3 rounded-2xl border-2 border-line focus:border-primary outline-none transition-colors text-ink font-medium"
+                    value={form.nameHash}
+                    onChange={handleNicknameChange}
+                    placeholder="새로운 닉네임을 입력하세요"
+                  />
+                  <button 
+                    type="button" 
+                    className="btn-mypage-outline whitespace-nowrap !px-6 !py-2"
+                    onClick={handleNicknameCheck}
+                  >
+                    중복 확인
+                  </button>
+                </div>
+                {nicknameMessage && (
+                  <p className={`text-[11px] ml-1 flex items-center gap-1 font-medium ${nicknameChecked ? 'text-emerald-500' : 'text-rose-400'}`}>
+                    {nicknameChecked ? <Check size={14} /> : <AlertCircle size={14} />}
+                    {nicknameMessage}
+                  </p>
+                )}
+              </div>
+
+              <div className="flex flex-col gap-2">
+                <label className="text-[11px] font-bold text-ink/60 uppercase tracking-wider ml-1">이메일 (변경 불가)</label>
+                <input 
+                  type="text" 
+                  className="px-5 py-3 rounded-2xl border-2 border-line bg-surface text-ink/40 cursor-not-allowed font-medium"
+                  value={form.email} 
+                  disabled 
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[11px] font-bold text-ink/60 uppercase tracking-wider ml-1">이름</label>
+                  <input 
+                    type="text" 
+                    className="px-5 py-3 rounded-2xl border-2 border-line bg-surface text-ink/40 cursor-not-allowed font-medium"
+                    value={form.name} 
+                    disabled 
+                  />
+                </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[11px] font-bold text-ink/60 uppercase tracking-wider ml-1">전화번호</label>
+                  <input 
+                    type="text" 
+                    className="px-5 py-3 rounded-2xl border-2 border-line bg-surface text-ink/40 cursor-not-allowed font-medium"
+                    value={form.phone} 
+                    disabled 
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex gap-4 mt-8">
+               <button 
+                type="button"
+                className="btn-mypage-outline flex-1 py-4 text-ink/60"
+                onClick={() => navigate("/mypage")}
+              >
+                취소
+              </button>
+              <button 
+                type="submit" 
+                className="bg-primary text-white flex-1 py-4 rounded-2xl font-bold shadow-lg shadow-orange-100 hover:bg-primary/90 transition-all justify-center flex items-center"
+                disabled={submitting}
+              >
+                {submitting ? "수정 중..." : "수정 완료"}
+              </button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+  );
+}
