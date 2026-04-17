@@ -31,18 +31,23 @@ export default function Navbar() {
   const [unreadCount, setUnreadCount] = useState(0);
   const notiRef = useRef(null);
 
+  // 쿠키 및 로컬스토리지에서 로그인 상태를 확인하는 함수
   const checkLoginStatus = () => {
+    // 1. 쿠키 확인
     const cookies = document.cookie.split(';');
     const hasCookieToken = cookies.some(cookie => cookie.trim().startsWith('accessToken='));
+
+    // 2. 로컬스토리지 확인 (로컬 로그인 시 사용)
     const hasLocalStorageToken = !!localStorage.getItem('accessToken');
 
     if (hasCookieToken || hasLocalStorageToken) {
-        setUserRole(localStorage.getItem('userRole') || 'user');
-        return true;
+      setUserRole(localStorage.getItem('userRole') || 'user');
+      return true;
     }
     return false;
   };
 
+  // 알림 관련 함수
   const fetchUnreadCount = useCallback(async () => {
     const token = getAuthToken();
     if (!token) return;
@@ -85,12 +90,17 @@ export default function Navbar() {
   }, []);
 
   useEffect(() => {
+    // 마운트 시 로그인 상태 체크
     setIsLoggedIn(checkLoginStatus());
+
+    // 페이지 이동이나 포커스 시 주기적으로 체크하여 상태 업데이트
     const handleFocus = () => setIsLoggedIn(checkLoginStatus());
     window.addEventListener('focus', handleFocus);
+
     return () => window.removeEventListener('focus', handleFocus);
   }, []);
 
+  // 로그인 시 30초 간격 안읽은 알림 수 폴링
   useEffect(() => {
     if (isLoggedIn) {
       fetchUnreadCount();
@@ -99,10 +109,12 @@ export default function Navbar() {
     }
   }, [isLoggedIn, fetchUnreadCount]);
 
+  // 드롭다운 열릴 때 최근 알림 로드
   useEffect(() => {
     if (showNotiDropdown) fetchRecentNotifications();
   }, [showNotiDropdown, fetchRecentNotifications]);
 
+  // 드롭다운 외부 클릭 시 닫기
   useEffect(() => {
     function handleClickOutside(e) {
       if (notiRef.current && !notiRef.current.contains(e.target)) {
@@ -117,20 +129,20 @@ export default function Navbar() {
     try {
       // 역할에 따라 로그아웃 URL 분기 (필요시)
       const logoutUrl = userRole === 'beneficiary' ? "/api/beneficiary/logout" : "/api/auth/logout/user/social";
-      
-      await fetch(logoutUrl, { 
+
+      await fetch(logoutUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" }
       });
-      
+
       // 2. 로컬스토리지 삭제
       localStorage.removeItem('accessToken');
       localStorage.removeItem('userRole');
-      
+
       setIsLoggedIn(false);
       setUserRole(null);
       alert("로그아웃 되었습니다.");
-      
+
       // 로그아웃 즉시 반영을 위해 메인으로 이동
       window.location.href = "/";
     } catch (error) {
@@ -179,6 +191,7 @@ export default function Navbar() {
             </Link>
           </div>
 
+          {/*가빈- 알림 버튼 추가*/}
           <div className="flex items-center gap-4">
             {isLoggedIn ? (
               <div className="flex items-center gap-2">
