@@ -48,6 +48,21 @@ const LoginPage = () => {
   const handleLocalLogin = async (e) => {
     e.preventDefault();
 
+    const extractErrorMessage = async (response) => {
+      try {
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const data = await response.json();
+          return data.message || "로그인에 실패했습니다.";
+        } else {
+          const text = await response.text();
+          return text || "로그인에 실패했습니다.";
+        }
+      } catch (e) {
+        return "로그인에 실패했습니다.";
+      }
+    };
+
     try {
       setLoginError("");
 
@@ -57,18 +72,7 @@ const LoginPage = () => {
       });
 
       if (!response.ok) {
-        let message = "로그인에 실패했습니다.";
-
-        if (response.status === 400) {
-          message = "입력값을 다시 확인해주세요.";
-        } else if (response.status === 401) {
-          message = "이메일 또는 비밀번호가 올바르지 않습니다.";
-        } else if (response.status === 403) {
-          message = "접근 권한이 없습니다.";
-        } else if (response.status >= 500) {
-          message = "서버 오류가 발생했습니다. 잠시 후 다시 시도해주세요.";
-        }
-
+        const message = await extractErrorMessage(response);
         throw new Error(message);
       }
 
