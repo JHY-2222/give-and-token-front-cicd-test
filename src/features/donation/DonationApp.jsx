@@ -36,6 +36,8 @@ import FoundationListPage from "../foundation/pages/FoundationListPage";
 import FoundationSignupPage from "../foundation/pages/FoundationSignupPage";
 import FoundationSignupCompletePage from "../foundation/pages/FoundationSignupCompletePage";
 import NotificationsPage from "./pages/NotificationsPage";
+import FoundationNotificationsPage from "../foundation/pages/FoundationNotificationsPage";  // [가빈] 
+import BeneficiaryNotificationsPage from "../beneficiary/pages/BeneficiaryNotificationsPage"; // [가빈]
 import BeneficiaryMainPage from "../beneficiary/pages/BeneficiaryMainPage";
 import MyPageLayout from '../myPageUser/pages/MyPageLayout';
 
@@ -159,9 +161,12 @@ function HomePage() {
 
 export default function DonationApp() {
   const location = useLocation();
-  const isFoundationRoute = location.pathname.startsWith("/foundation");
+  // [가빈] 기부단체 경로 감지 (알림 페이지는 제외)
+  const isFoundationRoute =
+    location.pathname.startsWith("/foundation") &&
+    !location.pathname.startsWith("/foundation/notifications");
 
-  // 💡 2. 하나라도 해당하면 true가 되도록 변수 생성
+  // 2. 하나라도 해당하면 true가 되도록 변수 생성     
   const shouldHideLayout = isFoundationRoute;
   return (
     <div className="min-h-screen bg-surface selection:bg-primary selection:text-white">
@@ -203,8 +208,10 @@ export default function DonationApp() {
           <Route path="/signup" element={<SignupPage />} />
           <Route path="/signup/google" element={<GoogleSignupPage />} />
 
-          {/* 알림 */}
+          {/* 알림 */} 
           <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/foundation/notifications" element={<FoundationNotificationsPage />} />                         
+          <Route path="/beneficiary/notifications" element={<BeneficiaryNotificationsPage />} />  
 
           {/* 마이페이지 */}
           <Route path="/mypage" element={<MyPageLayout />}>

@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
-import NotificationsPageBase from "./NotificationsPageBase";
+import NotificationsPageBase from "../../donation/pages/NotificationsPageBase";
 
-function getUserToken() {
+function getBeneficiaryToken() {
   const local = localStorage.getItem("accessToken");
   if (local) return local;
   const match = document.cookie
@@ -11,8 +11,8 @@ function getUserToken() {
   return match ? match.split("=")[1] : null;
 }
 
-export default function NotificationsPage() {
-  const token = getUserToken();
+export default function BeneficiaryNotificationsPage() {
+  const token = getBeneficiaryToken();
 
   if (!token) {
     return (

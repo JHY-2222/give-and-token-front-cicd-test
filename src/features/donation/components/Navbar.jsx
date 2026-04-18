@@ -1,6 +1,7 @@
 import { Sparkles, LogOut, User } from "lucide-react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
+import NotificationBell from "./NotificationBell";  // 알림 벨 컴포넌트 추가
 
 export default function Navbar() {
   const navigate = useNavigate();
@@ -97,6 +98,7 @@ export default function Navbar() {
             <div className="flex items-center gap-4">
               {isLoggedIn ? (
                   <div className="flex items-center gap-2">
+                    <NotificationBell userRole={userRole} />  {/* 알림 벨 아이콘 추가 */}
                     <Link
                         to={getDashboardLink()}
                         className="bg-primary text-white px-6 py-2.5 rounded-full text-sm font-bold shadow-lg shadow-primary/20

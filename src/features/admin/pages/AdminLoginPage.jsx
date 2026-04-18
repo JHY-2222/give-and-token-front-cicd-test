@@ -30,8 +30,8 @@ export default function AdminLoginPage() {
       const response = await loginAdmin(form);
 
       if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || "관리자 로그인에 실패했습니다.");
+        const errorJson = await response.json().catch(() => null);
+        throw new Error(errorJson?.message || "관리자 로그인에 실패했습니다.");
       }
 
       const data = await response.json();
