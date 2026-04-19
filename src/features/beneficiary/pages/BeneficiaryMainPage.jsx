@@ -230,7 +230,7 @@ const BeneficiaryMainPage = () => {
 
   return (
     <div className="min-h-screen bg-surface font-sans text-ink">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 pt-32">
+      <div className="w-[90%] max-w-5xl mx-auto py-10 pt-36">
         
         <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
           <div className="flex items-center gap-5">
@@ -242,19 +242,12 @@ const BeneficiaryMainPage = () => {
               <p className="text-stone-500 font-medium">수혜자 대시보드에서 후원 현황과 보고서를 관리하세요.</p>
             </div>
           </div>
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 bg-white border-2 border-line px-6 py-3 rounded-2xl font-bold hover:bg-stone-50 transition-all text-stone-600 self-start md:self-center"
-          >
-            <LogOut size={18} />
-            로그아웃
-          </button>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          
-          <aside className="lg:col-span-3 space-y-4">
-            <nav className="bg-white rounded-[2rem] p-4 shadow-sm border-4 border-line">
+
+          <aside className="lg:col-span-4 space-y-4">
+            <nav className="bg-white rounded-xl p-4 shadow-sm border-4 border-line">
               <button 
                 onClick={() => setActiveTab("dashboard")}
                 className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all ${activeTab === 'dashboard' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:bg-surface'}`}
@@ -278,7 +271,24 @@ const BeneficiaryMainPage = () => {
               </button>
             </nav>
 
-            <div className="bg-secondary/10 p-6 rounded-[2rem] border-2 border-secondary/20">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-white rounded-xl p-4 border-4 border-line">
+                <h3 className="font-bold mb-2 flex items-center gap-1 text-sm">
+                  <CheckCircle className="text-green-500" size={16} />
+                  완료된 보고서
+                </h3>
+                <div className="text-2xl font-black">{reports.length}건</div>
+              </div>
+              <div className="bg-white rounded-xl p-4 border-4 border-line">
+                <h3 className="font-bold mb-2 flex items-center gap-1 text-sm">
+                  <PlusCircle className="text-primary" size={16} />
+                  진행 중인 캠페인
+                </h3>
+                <div className="text-2xl font-black">{campaigns.length}건</div>
+              </div>
+            </div>
+
+            <div className="p-6">
               <h3 className="font-bold text-secondary mb-2 flex items-center gap-2">
                 <AlertCircle size={16} />
                 도움이 필요하신가요?
@@ -289,11 +299,11 @@ const BeneficiaryMainPage = () => {
             </div>
           </aside>
 
-          <main className="lg:col-span-9">
+          <main className="lg:col-span-8">
             
             {activeTab === "dashboard" && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="bg-white rounded-[3rem] p-8 md:p-10 shadow-xl shadow-stone-200/50 border-4 border-line relative overflow-hidden">
+                <div className="bg-white rounded-2xl p-8 md:p-10 shadow-xl shadow-stone-200/50 border-4 border-line relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
                   
                   <div className="relative z-10">
@@ -349,22 +359,6 @@ const BeneficiaryMainPage = () => {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="bg-white rounded-[2rem] p-6 border-4 border-line">
-                    <h3 className="font-bold mb-4 flex items-center gap-2">
-                      <CheckCircle className="text-green-500" size={20} />
-                      완료된 보고서
-                    </h3>
-                    <div className="text-3xl font-display font-black">{reports.length}건</div>
-                  </div>
-                  <div className="bg-white rounded-[2rem] p-6 border-4 border-line">
-                    <h3 className="font-bold mb-4 flex items-center gap-2">
-                      <PlusCircle className="text-primary" size={20} />
-                      진행 중인 캠페인
-                    </h3>
-                    <div className="text-3xl font-display font-black">{campaigns.length}건</div>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -385,7 +379,7 @@ const BeneficiaryMainPage = () => {
                         </button>
                       </div>
                     )) : (
-                      <div className="col-span-full bg-white py-12 rounded-[2rem] border-4 border-dashed border-line text-center">
+                      <div className="col-span-full bg-white py-12 rounded-xl border-4 border-dashed border-line text-center">
                         <p className="text-stone-400 font-medium">참여 중인 캠페인이 없습니다.</p>
                       </div>
                     )}
@@ -418,7 +412,7 @@ const BeneficiaryMainPage = () => {
                         </button>
                       </div>
                     )) : (
-                      <div className="bg-white py-12 rounded-[2rem] border-4 border-dashed border-line text-center">
+                      <div className="bg-white py-12 rounded-xl border-4 border-dashed border-line text-center">
                         <p className="text-stone-400 font-medium">작성된 보고서가 없습니다.</p>
                       </div>
                     )}
@@ -428,7 +422,7 @@ const BeneficiaryMainPage = () => {
             )}
 
             {activeTab === "profile" && (
-              <div className="bg-white rounded-[3rem] p-8 md:p-10 shadow-xl shadow-stone-200/50 border-4 border-line animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="bg-white rounded-2xl p-8 md:p-10 shadow-xl shadow-stone-200/50 border-4 border-line animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <h2 className="text-2xl font-display font-bold mb-8">내 정보 수정</h2>
                 <form 
                   onSubmit={async (e) => {
@@ -522,7 +516,7 @@ const BeneficiaryMainPage = () => {
       {/* 환전 신청 모달 */}
       {isRedeemModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm">
-          <div className="bg-white w-full max-w-md rounded-[3rem] p-10 shadow-2xl relative animate-in zoom-in-95 duration-200">
+          <div className="bg-white w-full max-w-md rounded-2xl p-10 shadow-2xl relative animate-in zoom-in-95 duration-200">
             <button 
               onClick={() => setIsRedeemModalOpen(false)}
               className="absolute top-8 right-8 text-stone-400 hover:text-ink transition-colors"
@@ -580,7 +574,7 @@ const BeneficiaryMainPage = () => {
       {/* 보고서 작성/수정 모달 */}
       {isReportModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-ink/50 backdrop-blur-sm overflow-y-auto">
-          <div className="bg-white w-full max-w-3xl rounded-[3rem] p-8 md:p-10 shadow-2xl relative my-10 animate-in zoom-in-95 duration-200">
+          <div className="bg-white w-full max-w-3xl rounded-2xl p-8 md:p-10 shadow-2xl relative my-10 animate-in zoom-in-95 duration-200">
             <button 
               onClick={() => setIsReportModalOpen(false)}
               className="absolute top-8 right-8 text-stone-400 hover:text-ink transition-colors"

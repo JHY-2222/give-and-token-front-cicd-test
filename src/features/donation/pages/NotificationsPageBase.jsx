@@ -81,7 +81,7 @@ export default function NotificationsPageBase({ token }) {
 
   return (
     <div className="min-h-screen bg-[#fffaf7] px-4 sm:px-6 pt-32 pb-16">
-      <div className="max-w-2xl mx-auto">
+      <div className="w-[90%] max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
