@@ -13,6 +13,7 @@ import {
   Pencil,
 } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import NotificationBell from "../../donation/components/NotificationBell";  //[가빈] 알림벨 추가 
 import {
   fetchFoundationMyInfo,
   fetchFoundationMyStats,
@@ -849,6 +850,7 @@ function FoundationDashboardPage() {
             <h1 className="text-5xl font-black leading-tight text-ink">
               기부단체 마이페이지
             </h1>
+            <NotificationBell userRole="foundation" />  {/* [가빈] 알림벨 추가 */}
           </header>
 
           {activeMenu === "home" ? (

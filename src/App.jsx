@@ -4,6 +4,7 @@ import DonationApp from "./features/donation/DonationApp";
 import TransactionDashboardPage from "./features/blockchain/pages/TransactionDashboardPage";
 import WalletDetailPage from "./features/blockchain/pages/WalletDetailPage";
 import TransactionDetailPage from "./features/blockchain/pages/TransactionDetailPage";
+import AdminApp from "./features/admin/AdminApp";
 
 function ThemeToggleIcon({ theme }) {
   if (theme === "dark") {
@@ -100,6 +101,10 @@ function App() {
 
   if (isBlockchainRoute) {
     return <DashboardLayout theme={theme} onToggleTheme={handleToggleTheme} />;
+  }
+  // [가빈] admin 페이지 분기하려고 추가합니다. 
+  if (location.pathname.startsWith("/admin")) {
+    return <AdminApp />;
   }
 
   return <DonationApp />;
