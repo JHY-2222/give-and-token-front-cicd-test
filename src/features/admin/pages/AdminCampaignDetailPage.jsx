@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { getAdminApiUrl, getAdminAuthHeaders } from "../util";
 
 function formatNumber(value) {
   const num = Number(value ?? 0);
@@ -40,9 +41,9 @@ export default function AdminCampaignDetailPage() {
         setLoading(true);
         setError("");
 
-        const response = await fetch(`/api/foundation/campaigns/${campaignNo}/detail`, {
+        const response = await fetch(getAdminApiUrl(`/campaigns/${campaignNo}/detail`), {
           method: "GET",
-          headers: { Accept: "application/json" },
+          headers: getAdminAuthHeaders({ Accept: "application/json" }),
         });
 
         if (!response.ok) {
@@ -53,7 +54,7 @@ export default function AdminCampaignDetailPage() {
         const payload = await response.json();
         if (!cancelled) setDetail(payload);
       } catch (err) {
-        if (!cancelled) setError(err.message || "Failed to load campaign detail.");
+        if (!cancelled) setError(err.message || "캠페인 상세 정보를 불러오지 못했습니다.");
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -68,9 +69,9 @@ export default function AdminCampaignDetailPage() {
   const stateRecord = location.state?.record ?? {};
   const imageList = useMemo(() => {
     if (!detail) return [];
+    const representative = detail.imagePath ? [detail.imagePath] : [];
     const detailImages = Array.isArray(detail.detailImagePaths) ? detail.detailImagePaths : [];
     const topImages = Array.isArray(detail.images) ? detail.images.map((img) => img?.imgPath).filter(Boolean) : [];
-    const representative = detail.representativeImagePath ? [detail.representativeImagePath] : [];
     return [...representative, ...detailImages, ...topImages].filter(Boolean);
   }, [detail]);
 
@@ -83,12 +84,12 @@ export default function AdminCampaignDetailPage() {
             <span />
             <span />
           </button>
-          <h1>Campaign Detail</h1>
+          <h1>캠페인 상세</h1>
         </div>
       </header>
 
       <main className="admin-dashboard-content">
-        {loading ? <p className="admin-dashboard-empty-text">Loading campaign detail...</p> : null}
+        {loading ? <p className="admin-dashboard-empty-text">캠페인 상세 정보를 불러오는 중...</p> : null}
         {error ? <p className="admin-dashboard-empty-text">{error}</p> : null}
 
         {!loading && !error && detail ? (
@@ -110,63 +111,71 @@ export default function AdminCampaignDetailPage() {
 
               <div className="admin-campaign-detail-fields">
                 <div className="admin-campaign-detail-field">
-                  <span>Approval Status</span>
+                  <span>승인 상태</span>
                   <strong>{detail.approvalStatus || stateRecord.approvalStatus || "-"}</strong>
                 </div>
                 <div className="admin-campaign-detail-field">
-                  <span>Campaign Status</span>
+                  <span>캠페인 상태</span>
                   <strong>{detail.campaignStatusLabel || detail.campaignStatus || "-"}</strong>
                 </div>
                 <div className="admin-campaign-detail-field">
-                  <span>Category Code</span>
+                  <span>카테고리 코드</span>
                   <strong>{detail.categoryCode || "-"}</strong>
                 </div>
                 <div className="admin-campaign-detail-field">
-                  <span>Entry Code</span>
+                  <span>참여 코드</span>
                   <strong>{detail.entryCode || "-"}</strong>
                 </div>
                 <div className="admin-campaign-detail-field">
-                  <span>Target Amount</span>
+                  <span>목표금액</span>
                   <strong>{formatCurrency(detail.targetAmount)}</strong>
                 </div>
                 <div className="admin-campaign-detail-field">
-                  <span>Current Amount</span>
+                  <span>현재 모금액</span>
                   <strong>{formatCurrency(detail.currentAmount)}</strong>
                 </div>
                 <div className="admin-campaign-detail-field">
-                  <span>Progress</span>
+                  <span>달성률</span>
                   <strong>{formatNumber(detail.progressPercent)}%</strong>
                 </div>
                 <div className="admin-campaign-detail-field">
-                  <span>Donors</span>
+                  <span>기부자 수</span>
                   <strong>{formatNumber(detail.donors)}</strong>
                 </div>
                 <div className="admin-campaign-detail-field">
-                  <span>Start At</span>
+                  <span>시작일</span>
                   <strong>{formatDateTime(detail.startAt)}</strong>
                 </div>
                 <div className="admin-campaign-detail-field">
-                  <span>End At</span>
+                  <span>종료일</span>
                   <strong>{formatDateTime(detail.endAt)}</strong>
                 </div>
                 <div className="admin-campaign-detail-field">
-                  <span>Usage Start</span>
+                  <span>사용 시작일</span>
                   <strong>{formatDateTime(detail.usageStartAt)}</strong>
                 </div>
                 <div className="admin-campaign-detail-field">
-                  <span>Usage End</span>
+                  <span>사용 종료일</span>
                   <strong>{formatDateTime(detail.usageEndAt)}</strong>
                 </div>
                 <div className="admin-campaign-detail-field admin-campaign-detail-field--wide">
-                  <span>Description</span>
+                  <span>소개</span>
                   <strong>{detail.description || "-"}</strong>
                 </div>
                 <div className="admin-campaign-detail-field admin-campaign-detail-field--wide">
-                  <span>Foundation</span>
-                  <strong>{detail.foundation?.foundationName || stateRecord.foundationName || "-"}</strong>
+                  <span>단체</span>
+                  <strong>{detail.foundation?.foundationName || stateRecord.foundationName || `No.${detail.foundationNo}` || "-"}</strong>
+                </div>
+                <div className="admin-campaign-detail-field">
+                  <span>수혜자 번호</span>
+                  <strong>{detail.beneficiaryNo ?? "-"}</strong>
+                </div>
+                <div className="admin-campaign-detail-field">
+                  <span>반려 사유</span>
+                  <strong>{detail.rejectReason || "-"}</strong>
                 </div>
                 <div className="admin-campaign-detail-field admin-campaign-detail-field--wide">
-                  <span>Wallet Address</span>
+                  <span>지갑 주소</span>
                   <strong>{detail.walletAddress || "-"}</strong>
                 </div>
               </div>
@@ -182,7 +191,7 @@ export default function AdminCampaignDetailPage() {
 
             <aside className="admin-campaign-detail-side">
               <article className="admin-dashboard-panel admin-campaign-detail-card">
-                <h3>Use Plans</h3>
+                <h3>사용 계획</h3>
                 <div className="admin-campaign-detail-list">
                   {Array.isArray(detail.usePlans) && detail.usePlans.length ? (
                     detail.usePlans.map((plan) => (
@@ -192,13 +201,13 @@ export default function AdminCampaignDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <p className="admin-dashboard-empty-text">No use plans.</p>
+                    <p className="admin-dashboard-empty-text">사용 계획이 없습니다.</p>
                   )}
                 </div>
               </article>
 
               <article className="admin-dashboard-panel admin-campaign-detail-card">
-                <h3>Recent Donors</h3>
+                <h3>최근 기부자</h3>
                 <div className="admin-campaign-detail-list">
                   {Array.isArray(detail.recentDonors) && detail.recentDonors.length ? (
                     detail.recentDonors.map((donor, index) => (
@@ -208,13 +217,13 @@ export default function AdminCampaignDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <p className="admin-dashboard-empty-text">No recent donors.</p>
+                    <p className="admin-dashboard-empty-text">최근 기부자가 없습니다.</p>
                   )}
                 </div>
               </article>
 
               <article className="admin-dashboard-panel admin-campaign-detail-card">
-                <h3>Documents</h3>
+                <h3>첨부 서류</h3>
                 <div className="admin-campaign-detail-list">
                   {Array.isArray(detail.documents) && detail.documents.length ? (
                     detail.documents.map((doc, index) => (
@@ -224,7 +233,7 @@ export default function AdminCampaignDetailPage() {
                       </div>
                     ))
                   ) : (
-                    <p className="admin-dashboard-empty-text">No documents.</p>
+                    <p className="admin-dashboard-empty-text">첨부 서류가 없습니다.</p>
                   )}
                 </div>
               </article>

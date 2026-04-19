@@ -5,24 +5,17 @@ import "../css/AdminLoginPage.css";
 
 export default function AdminLoginPage() {
   const navigate = useNavigate();
-  const [form, setForm] = useState({
-    adminId: "",
-    password: "",
-  });
+  const [form, setForm] = useState({ adminId: "", password: "" });
   const [submitting, setSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     try {
       setSubmitting(true);
       setErrorMessage("");
@@ -47,44 +40,63 @@ export default function AdminLoginPage() {
 
   return (
     <div className="admin-login-page">
-      <div className="admin-login-shell">
-        <section className="admin-login-card">
-          <div className="admin-login-brand">
-            <div className="admin-login-brand__badge">giva N token</div>
-            <h1>giva N token Admin</h1>
-            <p>관리자 전용 대시보드 로그인</p>
+      {/* 왼쪽 건물 사진 패널 */}
+      <div className="admin-login-left">
+        <div className="admin-login-left__overlay" />
+        <div className="admin-login-left__content">
+          <h2 className="admin-login-left__title">
+            Give N Token
+          </h2>
+          <p className="admin-login-left__desc">관리자 전용 페이지</p>
+        </div>
+      </div>
+
+      {/* 오른쪽 로그인 폼 */}
+      <div className="admin-login-right">
+        <div className="admin-login-form-wrap">
+          <div className="admin-login-form-header">
+            <h1>Login</h1>
+            <p>관리자 계정으로 로그인하세요</p>
           </div>
 
           <form className="admin-login-form" onSubmit={handleSubmit}>
-            <label className="admin-login-field">
-              <span>ADMIN ID</span>
+            <div className="admin-login-field">
               <input
                 type="text"
                 name="adminId"
                 value={form.adminId}
                 onChange={handleChange}
                 placeholder="아이디를 입력하세요"
+                autoComplete="username"
+                required
               />
-            </label>
+            </div>
 
-            <label className="admin-login-field">
-              <span>PASSWORD</span>
+            <div className="admin-login-field">
               <input
                 type="password"
                 name="password"
                 value={form.password}
                 onChange={handleChange}
                 placeholder="비밀번호를 입력하세요"
+                autoComplete="current-password"
+                required
               />
-            </label>
+            </div>
 
-            {errorMessage && <p className="admin-login-error">{errorMessage}</p>}
+            {errorMessage && (
+              <p className="admin-login-error">{errorMessage}</p>
+            )}
 
             <button type="submit" className="admin-login-submit" disabled={submitting}>
-              {submitting ? "접속 중..." : "대시보드 접속하기"}
+              {submitting ? "접속 중..." : "로그인"}
             </button>
           </form>
-        </section>
+
+          <div className="admin-login-footer">
+            계정 정보 확인은 담당자에게 문의하세요 &nbsp;·&nbsp; <a href="/">홈으로</a>
+          </div>
+        </div>
       </div>
     </div>
   );

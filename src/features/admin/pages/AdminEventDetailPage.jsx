@@ -11,11 +11,11 @@ function formatDate(value) {
 }
 
 function getPageMeta(kind) {
-  if (kind === "campaign") return { title: "Campaign Detail", tab: "campaigns" };
-  if (kind === "report") return { title: "Report Detail", tab: "reports" };
-  if (kind === "log") return { title: "Activity Log Detail", tab: "logs" };
-  if (kind === "request") return { title: "Request Detail", tab: "requests" };
-  return { title: "Detail", tab: "dashboard" };
+  if (kind === "campaign") return { title: "캠페인 상세", tab: "campaigns" };
+  if (kind === "report") return { title: "보고서 상세", tab: "reports" };
+  if (kind === "log") return { title: "활동 로그 상세", tab: "logs" };
+  if (kind === "request") return { title: "요청 상세", tab: "requests" };
+  return { title: "상세", tab: "dashboard" };
 }
 
 export default function AdminEventDetailPage({ kind = "detail" }) {
@@ -270,45 +270,45 @@ export default function AdminEventDetailPage({ kind = "detail" }) {
 
           {kind === "campaign" ? (
             <article className="admin-event-detail-card admin-event-detail-card--full">
-              <h3>Campaign Detail</h3>
-              {campaignLoading ? <p>Loading campaign detail...</p> : null}
+              <h3>캠페인 상세</h3>
+              {campaignLoading ? <p>캠페인 상세 정보를 불러오는 중...</p> : null}
               {campaignError ? <p>{campaignError}</p> : null}
               {!campaignLoading && !campaignError && campaignDetail ? (
                 <dl className="admin-event-detail-kv">
                   <div>
-                    <dt>Title</dt>
+                    <dt>제목</dt>
                     <dd>{campaignDetail.title ?? "-"}</dd>
                   </div>
                   <div>
-                    <dt>Category</dt>
+                    <dt>카테고리</dt>
                     <dd>{campaignDetail.category ?? "-"}</dd>
                   </div>
                   <div>
-                    <dt>Goal Amount</dt>
+                    <dt>목표금액</dt>
                     <dd>{campaignDetail.targetAmount ?? "-"}</dd>
                   </div>
                   <div>
-                    <dt>Raised Amount</dt>
+                    <dt>모금액</dt>
                     <dd>{campaignDetail.currentAmount ?? "-"}</dd>
                   </div>
                   <div>
-                    <dt>Approval Status</dt>
+                    <dt>승인 상태</dt>
                     <dd>{campaignDetail.approvalStatus ?? "-"}</dd>
                   </div>
                   <div>
-                    <dt>Campaign Status</dt>
+                    <dt>캠페인 상태</dt>
                     <dd>{campaignDetail.campaignStatus ?? "-"}</dd>
                   </div>
                   <div>
-                    <dt>Start At</dt>
+                    <dt>시작일</dt>
                     <dd>{formatDate(campaignDetail.startAt)}</dd>
                   </div>
                   <div>
-                    <dt>End At</dt>
+                    <dt>종료일</dt>
                     <dd>{formatDate(campaignDetail.endAt)}</dd>
                   </div>
                   <div>
-                    <dt>Foundation</dt>
+                    <dt>단체</dt>
                     <dd>{campaignDetail.foundation?.foundationName ?? record?.foundationName ?? "-"}</dd>
                   </div>
                 </dl>
@@ -404,7 +404,7 @@ export default function AdminEventDetailPage({ kind = "detail" }) {
 
           {record && kind !== "report" && kind !== "campaign" && kind !== "log" ? (
             <article className="admin-event-detail-card admin-event-detail-card--full">
-              <h3>Raw Payload</h3>
+              <h3>원시 데이터</h3>
               <pre>{JSON.stringify(record, null, 2)}</pre>
             </article>
           ) : null}

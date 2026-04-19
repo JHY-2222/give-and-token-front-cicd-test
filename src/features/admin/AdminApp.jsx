@@ -1,16 +1,22 @@
 import { Navigate, Outlet, Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import { getAdminAccessToken } from "./util";
 import {
   BarChart3,
   Bell,
   BriefcaseBusiness,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  ChevronUp,
   FileText,
   LayoutDashboard,
   LogOut,
   Megaphone,
+  Settings,
   ShieldCheck,
   Users,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import AdminDashboardPage from "./pages/AdminDashboardPage";
 import AdminCampaignDetailPage from "./pages/AdminCampaignDetailPage";
 import AdminEventDetailPage from "./pages/AdminEventDetailPage";
@@ -19,34 +25,116 @@ import AdminLoginPage from "./pages/AdminLoginPage";
 import { logoutAdmin } from "./util";
 import "./css/AdminDashboardPage.css";
 
-const NAV_ITEMS = [
-  { key: "dashboard", label: "Dashboard", icon: LayoutDashboard, section: "Donation" },
-  { key: "foundations", label: "Foundation", icon: BriefcaseBusiness, section: "Donation" },
-  { key: "campaigns", label: "Campaign", icon: Megaphone, section: "Donation" },
-  { key: "reports", label: "Report", icon: FileText, section: "Donation" },
-  { key: "inactive", label: "비활성화 단체", icon: ShieldCheck, section: "Donation" },
-  { key: "members", label: "Users", icon: Users, section: "Operations" },
-  { key: "requests", label: "새 요청", icon: Bell, section: "Operations" },
-  { key: "logs", label: "Admin Logs", icon: BarChart3, section: "Operations" },
+const NAV_GROUPS = [
+  {
+    key: "foundations",
+    label: "기부 단체",
+    icon: BriefcaseBusiness,
+    items: [
+      { key: "foundations-approval", label: "승인·반려 관리" },
+      { key: "foundations-list", label: "단체 조회" },
+      { key: "inactive", label: "비활성화 단체" },
+    ],
+  },
+  {
+    key: "campaigns",
+    label: "캠페인",
+    icon: Megaphone,
+    items: [
+      { key: "campaigns-approval", label: "승인·반려 관리" },
+      { key: "campaigns-list", label: "캠페인 조회" },
+    ],
+  },
+  {
+    key: "reports",
+    label: "활동 보고서",
+    icon: FileText,
+    items: [
+      { key: "reports-approval", label: "승인·반려 관리" },
+      { key: "reports-list", label: "보고서 조회" },
+    ],
+  },
+  {
+    key: "ops",
+    label: "운영",
+    icon: Settings,
+    items: [
+      { key: "members", label: "회원 관리" },
+      { key: "requests", label: "새 요청" },
+      { key: "logs", label: "관리자 로그" },
+      { key: "send-history", label: "발송 내역" },
+    ],
+  },
 ];
 
-function SidebarSection({ title, items, activeKey, onSelect }) {
-  return (
-    <div className="admin-dashboard-sidebar__section">
-      <p className="admin-dashboard-sidebar__section-title">{title}</p>
-      <div className="admin-dashboard-sidebar__list">
-        {items.map(({ key, label, icon: Icon }) => (
-          <button
-            key={key}
-            type="button"
-            onClick={() => onSelect(key)}
-            className={`admin-dashboard-sidebar__item ${activeKey === key ? "is-active" : ""}`}
-          >
-            <Icon size={18} />
-            <span>{label}</span>
-          </button>
-        ))}
+const KEY_TO_URL = {
+  dashboard:              "/admin/dashboard",
+  "foundations-approval": "/admin/dashboard?tab=foundations&view=approval",
+  "foundations-list":     "/admin/dashboard?tab=foundations&view=list",
+  inactive:               "/admin/dashboard?tab=inactive",
+  "campaigns-approval":   "/admin/dashboard?tab=campaigns&view=approval",
+  "campaigns-list":       "/admin/dashboard?tab=campaigns&view=list",
+  "reports-approval":     "/admin/dashboard?tab=reports&view=approval",
+  "reports-list":         "/admin/dashboard?tab=reports&view=list",
+  members:                "/admin/dashboard?tab=members",
+  requests:               "/admin/dashboard?tab=requests",
+  logs:                   "/admin/dashboard?tab=logs",
+  "send-history":         "/admin/dashboard?tab=send-history",
+};
+
+function SidebarGroup({ group, activeKey, onSelect, sidebarCollapsed, onOpenFlyout, isActiveFlyout }) {
+  const [open, setOpen] = useState(true);
+  const hasActive = group.items.some((item) => item.key === activeKey);
+  const GroupIcon = group.icon;
+
+  const handleIconClick = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    onOpenFlyout(isActiveFlyout ? null : { key: group.key, top: rect.top });
+  };
+
+  if (sidebarCollapsed) {
+    return (
+      <div className="admin-sidebar-group">
+        <button
+          type="button"
+          className={`admin-sidebar-group__icon-btn ${hasActive ? "has-active" : ""} ${isActiveFlyout ? "is-flyout-open" : ""}`}
+          onClick={handleIconClick}
+          title={group.label}
+        >
+          <GroupIcon size={18} />
+        </button>
       </div>
+    );
+  }
+
+  return (
+    <div className="admin-sidebar-group">
+      <button
+        type="button"
+        className={`admin-sidebar-group__header ${hasActive ? "has-active" : ""}`}
+        onClick={() => setOpen((p) => !p)}
+      >
+        <div className="admin-sidebar-group__header-left">
+          <GroupIcon size={16} />
+          <span>{group.label}</span>
+        </div>
+        {open ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+      </button>
+      {open && (
+        <div className="admin-sidebar-group__items">
+          {group.items.map(({ key, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => onSelect(key)}
+              className={`admin-sidebar-sub-item ${activeKey === key ? "is-active" : ""}`}
+            >
+              <span className="admin-sidebar-sub-dot" />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -55,31 +143,45 @@ function AdminShell() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  if (!getAdminAccessToken()) {
+    return <Navigate to="/admin/login" replace />;
+  }
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [flyoutState, setFlyoutState] = useState(null);
+
   const activeKey = useMemo(() => {
-    if (location.pathname.startsWith("/admin/foundation/")) return "foundations";
-    if (location.pathname.startsWith("/admin/campaign/")) return "campaigns";
-    if (location.pathname.startsWith("/admin/report/")) return "reports";
+    const sp = new URLSearchParams(location.search);
+    const tab = sp.get("tab");
+    const view = sp.get("view");
+
+    if (location.pathname.startsWith("/admin/foundation/")) return "foundations-approval";
+    if (location.pathname.startsWith("/admin/campaign/")) return "campaigns-approval";
+    if (location.pathname.startsWith("/admin/report/")) return "reports-approval";
     if (location.pathname.startsWith("/admin/request/")) return "requests";
     if (location.pathname.startsWith("/admin/log/")) return "logs";
-    const tab = new URLSearchParams(location.search).get("tab");
+
+    if (tab === "foundations") return view === "list" ? "foundations-list" : "foundations-approval";
+    if (tab === "campaigns") return view === "list" ? "campaigns-list" : "campaigns-approval";
+    if (tab === "reports") return view === "list" ? "reports-list" : "reports-approval";
     return tab ?? "dashboard";
   }, [location]);
 
-  const groupedItems = useMemo(
-    () =>
-      NAV_ITEMS.reduce((acc, item) => {
-        acc[item.section] = [...(acc[item.section] ?? []), item];
-        return acc;
-      }, {}),
-    [],
-  );
+  useEffect(() => {
+    if (!flyoutState) return;
+    const handler = (e) => {
+      if (
+        !e.target.closest(".admin-sidebar-flyout") &&
+        !e.target.closest(".admin-sidebar-group__icon-btn")
+      ) {
+        setFlyoutState(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [flyoutState]);
 
   const handleSelect = (key) => {
-    if (key === "dashboard") {
-      navigate("/admin/dashboard");
-    } else {
-      navigate(`/admin/dashboard?tab=${key}`);
-    }
+    navigate(KEY_TO_URL[key] ?? `/admin/dashboard?tab=${key}`);
   };
 
   const handleLogout = async () => {
@@ -91,36 +193,107 @@ function AdminShell() {
       navigate("/admin/login");
     } catch (error) {
       console.error(error);
-      window.alert("Logout request failed. Please retry.");
+      window.alert("로그아웃 요청에 실패했습니다. 다시 시도해주세요.");
     }
   };
 
+  const activeFlyoutGroup = flyoutState ? NAV_GROUPS.find((g) => g.key === flyoutState.key) : null;
+
   return (
-    <div className="admin-dashboard-page">
-      <aside className="admin-dashboard-sidebar">
-        <div className="admin-dashboard-sidebar__brand">
-          <div className="admin-dashboard-sidebar__logo">g</div>
-          <div>
-            <strong>give N token</strong>
-            <span>Admin Console</span>
+    <div className={`admin-dashboard-page ${sidebarCollapsed ? "sidebar-collapsed" : ""}`}>
+      <div className="admin-sidebar-wrapper">
+        <aside className="admin-dashboard-sidebar">
+          {/* 브랜드 */}
+          <div className={`admin-dashboard-sidebar__brand ${sidebarCollapsed ? "is-collapsed" : ""}`}>
+            <div className="admin-dashboard-sidebar__logo">g</div>
+            {!sidebarCollapsed && (
+              <div>
+                <strong>give N token</strong>
+                <span>관리자 콘솔</span>
+              </div>
+            )}
           </div>
-        </div>
 
-        {Object.entries(groupedItems).map(([section, items]) => (
-          <SidebarSection
-            key={section}
-            title={section}
-            items={items}
-            activeKey={activeKey}
-            onSelect={handleSelect}
-          />
-        ))}
+          {/* 대시보드 (단독 항목) */}
+          {!sidebarCollapsed ? (
+            <div className="admin-sidebar-dashboard-item">
+              <button
+                type="button"
+                className={`admin-sidebar-group__header ${activeKey === "dashboard" ? "has-active is-dashboard-active" : ""}`}
+                onClick={() => handleSelect("dashboard")}
+              >
+                <div className="admin-sidebar-group__header-left">
+                  <LayoutDashboard size={16} />
+                  <span>대시보드</span>
+                </div>
+              </button>
+            </div>
+          ) : (
+            <div className="admin-sidebar-group">
+              <button
+                type="button"
+                className={`admin-sidebar-group__icon-btn ${activeKey === "dashboard" ? "has-active" : ""}`}
+                onClick={() => handleSelect("dashboard")}
+                title="대시보드"
+              >
+                <LayoutDashboard size={18} />
+              </button>
+            </div>
+          )}
 
-        <button type="button" className="admin-dashboard-sidebar__logout" onClick={handleLogout}>
-          <LogOut size={18} />
-          <span>Logout</span>
+          {/* 그룹 메뉴 */}
+          <nav className="admin-dashboard-sidebar__nav">
+            {NAV_GROUPS.map((group) => (
+              <SidebarGroup
+                key={group.key}
+                group={group}
+                activeKey={activeKey}
+                onSelect={handleSelect}
+                sidebarCollapsed={sidebarCollapsed}
+                onOpenFlyout={setFlyoutState}
+                isActiveFlyout={flyoutState?.key === group.key}
+              />
+            ))}
+          </nav>
+
+          <button
+            type="button"
+            className="admin-dashboard-sidebar__logout"
+            onClick={handleLogout}
+            title="로그아웃"
+          >
+            <LogOut size={16} />
+            {!sidebarCollapsed && <span>로그아웃</span>}
+          </button>
+        </aside>
+
+        {/* 사이드바 토글 버튼 */}
+        <button
+          type="button"
+          className="admin-sidebar-collapse-btn"
+          onClick={() => { setSidebarCollapsed((p) => !p); setFlyoutState(null); }}
+          title={sidebarCollapsed ? "사이드바 펼치기" : "사이드바 접기"}
+        >
+          {sidebarCollapsed ? <ChevronRight size={13} /> : <ChevronLeft size={13} />}
         </button>
-      </aside>
+
+        {/* 플라이아웃 팝업 */}
+        {flyoutState && sidebarCollapsed && activeFlyoutGroup && (
+          <div className="admin-sidebar-flyout" style={{ top: flyoutState.top - 8 }}>
+            <p className="admin-sidebar-flyout__title">{activeFlyoutGroup.label}</p>
+            {activeFlyoutGroup.items.map(({ key, label }) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => { handleSelect(key); setFlyoutState(null); }}
+                className={`admin-sidebar-flyout__item ${activeKey === key ? "is-active" : ""}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
 
       <div className="admin-dashboard-main">
         <Outlet />

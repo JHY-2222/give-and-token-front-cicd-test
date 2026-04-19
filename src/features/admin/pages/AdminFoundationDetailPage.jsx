@@ -103,7 +103,7 @@ export default function AdminFoundationDetailPage() {
         setCampaigns(normalizePageContent(campaignPayload));
       } catch (err) {
         if (!cancelled) {
-          setError(err.message || "Failed to load foundation detail.");
+          setError(err.message || "단체 상세 정보를 불러오지 못했습니다.");
         }
       } finally {
         if (!cancelled) {
@@ -157,7 +157,7 @@ export default function AdminFoundationDetailPage() {
 
       if (!response.ok) {
         const text = await response.text().catch(() => "");
-        throw new Error(text || "Deactivate request failed.");
+        throw new Error(text || "비활성화 요청에 실패했습니다.");
       }
 
       setDetail((prev) => ({
@@ -166,7 +166,7 @@ export default function AdminFoundationDetailPage() {
       }));
       setShowDeactivateModal(false);
     } catch (err) {
-      window.alert(err.message || "Failed to deactivate foundation.");
+      window.alert(err.message || "단체 비활성화에 실패했습니다.");
     } finally {
       setProcessing(false);
       setProcessingAction("");
@@ -184,7 +184,7 @@ export default function AdminFoundationDetailPage() {
 
       if (!response.ok) {
         const text = await response.text().catch(() => "");
-        throw new Error(text || "Approve request failed.");
+        throw new Error(text || "승인 요청에 실패했습니다.");
       }
 
       setDetail((prev) => ({
@@ -192,9 +192,9 @@ export default function AdminFoundationDetailPage() {
         reviewStatus: "APPROVED",
         accountStatus: "ACTIVE",
       }));
-      window.alert("Foundation approved.");
+      window.alert("단체가 승인되었습니다.");
     } catch (err) {
-      window.alert(err.message || "Failed to approve foundation.");
+      window.alert(err.message || "단체 승인에 실패했습니다.");
     } finally {
       setProcessing(false);
       setProcessingAction("");
@@ -204,7 +204,7 @@ export default function AdminFoundationDetailPage() {
   const handleReject = async () => {
     const trimmedReason = rejectReasonInput.trim();
     if (!trimmedReason) {
-      window.alert("Please enter reject reason.");
+      window.alert("반려 사유를 입력해주세요.");
       return;
     }
 
@@ -224,7 +224,7 @@ export default function AdminFoundationDetailPage() {
 
       if (!response.ok) {
         const text = await response.text().catch(() => "");
-        throw new Error(text || "Reject request failed.");
+        throw new Error(text || "반려 요청에 실패했습니다.");
       }
 
       setDetail((prev) => ({
@@ -234,9 +234,9 @@ export default function AdminFoundationDetailPage() {
       }));
       setShowRejectModal(false);
       setRejectReasonInput("");
-      window.alert("Foundation rejected.");
+      window.alert("단체가 반려되었습니다.");
     } catch (err) {
-      window.alert(err.message || "Failed to reject foundation.");
+      window.alert(err.message || "단체 반려에 실패했습니다.");
     } finally {
       setProcessing(false);
       setProcessingAction("");
@@ -252,12 +252,12 @@ export default function AdminFoundationDetailPage() {
             <span />
             <span />
           </button>
-          <h1>Foundation Detail</h1>
+          <h1>단체 상세</h1>
         </div>
       </header>
 
       <main className="admin-dashboard-content">
-          {loading ? <p className="admin-dashboard-empty-text">Loading detail...</p> : null}
+          {loading ? <p className="admin-dashboard-empty-text">상세 정보를 불러오는 중...</p> : null}
           {error ? <p className="admin-dashboard-empty-text">{error}</p> : null}
 
           {!loading && !error && detail ? (
@@ -279,31 +279,31 @@ export default function AdminFoundationDetailPage() {
 
                 <div className="admin-foundation-detail-fields">
                   <div className="admin-foundation-detail-field">
-                    <span>Representative</span>
+                    <span>대표자</span>
                     <strong>{detail.representativeName || "-"}</strong>
                   </div>
                   <div className="admin-foundation-detail-field">
-                    <span>Business Number</span>
+                    <span>사업자 번호</span>
                     <strong>{detail.businessRegistrationNumber || "-"}</strong>
                   </div>
                   <div className="admin-foundation-detail-field">
-                    <span>Contact</span>
+                    <span>연락처</span>
                     <strong>{detail.contactPhone || "-"}</strong>
                   </div>
                   <div className="admin-foundation-detail-field">
-                    <span>Foundation Type</span>
+                    <span>단체 유형</span>
                     <strong>{detail.foundationType || "-"}</strong>
                   </div>
                   <div className="admin-foundation-detail-field">
-                    <span>Review Status</span>
+                    <span>검토 상태</span>
                     <strong>{detail.reviewStatus || "-"}</strong>
                   </div>
                   <div className="admin-foundation-detail-field">
-                    <span>Account Status</span>
+                    <span>계정 상태</span>
                     <strong>{detail.accountStatus || "-"}</strong>
                   </div>
                   <div className="admin-foundation-detail-field admin-foundation-detail-field--wide">
-                    <span>Description</span>
+                    <span>단체 소개</span>
                     <strong>{detail.description || "-"}</strong>
                   </div>
                 </div>
@@ -316,7 +316,7 @@ export default function AdminFoundationDetailPage() {
                       onClick={handleApprove}
                       disabled={processing}
                     >
-                      {processing && processingAction === "approve" ? "Processing..." : "Approve Foundation"}
+                      {processing && processingAction === "approve" ? "처리 중..." : "단체 승인"}
                     </button>
                     <button
                       type="button"
@@ -324,7 +324,7 @@ export default function AdminFoundationDetailPage() {
                       onClick={() => setShowRejectModal(true)}
                       disabled={processing}
                     >
-                      Reject Foundation
+                      단체 반려
                     </button>
                   </div>
                 ) : null}
@@ -335,50 +335,50 @@ export default function AdminFoundationDetailPage() {
                     className="admin-foundation-detail-danger"
                     onClick={() => setShowDeactivateModal(true)}
                   >
-                    Deactivate Foundation
+                    단체 비활성화
                   </button>
                 ) : (
-                  <div className="admin-foundation-detail-disabled">Already inactive</div>
+                  <div className="admin-foundation-detail-disabled">이미 비활성 상태입니다</div>
                 )}
               </article>
 
               <article className="admin-foundation-activity-column">
                 <section className="admin-dashboard-panel admin-foundation-activity-card">
-                  <h3>Platform Activity</h3>
+                  <h3>플랫폼 활동</h3>
                   <div className="admin-foundation-activity-list">
                     <div>
-                      <span>Wallet Address</span>
+                      <span>지갑 주소</span>
                       <strong>{wallet?.walletAddress || "-"}</strong>
                     </div>
                     <div>
-                      <span>Wallet Balance</span>
+                      <span>지갑 잔액</span>
                       <strong>{formatCurrency(wallet?.balance)}</strong>
                     </div>
                     <div>
-                      <span>Total Campaigns</span>
+                      <span>전체 캠페인</span>
                       <strong>{formatNumber(activitySummary.campaignCount)}</strong>
                     </div>
                     <div>
-                      <span>Ongoing Campaigns</span>
+                      <span>진행 중 캠페인</span>
                       <strong>{formatNumber(activitySummary.ongoingCount)}</strong>
                     </div>
                     <div>
-                      <span>Raised Amount</span>
+                      <span>모금액</span>
                       <strong>{formatCurrency(activitySummary.totalCurrent)}</strong>
                     </div>
                     <div>
-                      <span>Target Amount</span>
+                      <span>목표금액</span>
                       <strong>{formatCurrency(activitySummary.totalTarget)}</strong>
                     </div>
                     <div>
-                      <span>Achievement Rate</span>
+                      <span>달성률</span>
                       <strong>{activitySummary.achievementRate.toFixed(1)}%</strong>
                     </div>
                   </div>
                 </section>
 
                 <section className="admin-dashboard-panel admin-foundation-activity-card">
-                  <h3>Campaign Snapshot</h3>
+                  <h3>캠페인 현황</h3>
                   <div className="admin-foundation-campaign-list">
                     {campaigns.length ? (
                       campaigns.slice(0, 6).map((campaign) => (
@@ -387,11 +387,11 @@ export default function AdminFoundationDetailPage() {
                           <p>
                             {formatCurrency(campaign.currentAmount)} / {formatCurrency(campaign.targetAmount)}
                           </p>
-                          <span>End: {formatDate(campaign.endAt)}</span>
+                          <span>마감: {formatDate(campaign.endAt)}</span>
                         </div>
                       ))
                     ) : (
-                      <p className="admin-dashboard-empty-text">No campaign data.</p>
+                      <p className="admin-dashboard-empty-text">캠페인 데이터가 없습니다.</p>
                     )}
                   </div>
                 </section>
@@ -403,21 +403,21 @@ export default function AdminFoundationDetailPage() {
       {showRejectModal ? (
         <div className="admin-modal-overlay" role="dialog" aria-modal="true">
           <div className="admin-modal">
-            <h4>Reject Foundation</h4>
-            <p>Please write reject reason before request.</p>
+            <h4>단체 반려</h4>
+            <p>반려 사유를 입력한 후 요청하세요.</p>
             <textarea
               className="admin-modal-textarea"
               value={rejectReasonInput}
               onChange={(e) => setRejectReasonInput(e.target.value)}
-              placeholder="Reject reason"
+              placeholder="반려 사유를 입력하세요"
               disabled={processing}
             />
             <div className="admin-modal-actions">
               <button type="button" onClick={() => setShowRejectModal(false)} disabled={processing}>
-                Cancel
+                취소
               </button>
               <button type="button" className="danger" onClick={handleReject} disabled={processing || !rejectReasonInput.trim()}>
-                {processing && processingAction === "reject" ? "Processing..." : "Reject"}
+                {processing && processingAction === "reject" ? "처리 중..." : "반려"}
               </button>
             </div>
           </div>
@@ -427,14 +427,14 @@ export default function AdminFoundationDetailPage() {
       {showDeactivateModal ? (
         <div className="admin-modal-overlay" role="dialog" aria-modal="true">
           <div className="admin-modal">
-            <h4>Deactivate Foundation</h4>
-            <p>Do you want to deactivate this approved foundation?</p>
+            <h4>단체 비활성화</h4>
+            <p>승인된 단체를 비활성화하시겠습니까?</p>
             <div className="admin-modal-actions">
               <button type="button" onClick={() => setShowDeactivateModal(false)} disabled={processing}>
-                Cancel
+                취소
               </button>
               <button type="button" className="danger" onClick={handleDeactivate} disabled={processing}>
-                {processing ? "Processing..." : "Deactivate"}
+                {processing ? "처리 중..." : "비활성화"}
               </button>
             </div>
           </div>
