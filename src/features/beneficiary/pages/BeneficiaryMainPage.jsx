@@ -242,13 +242,6 @@ const BeneficiaryMainPage = () => {
               <p className="text-stone-500 font-medium">수혜자 대시보드에서 후원 현황과 보고서를 관리하세요.</p>
             </div>
           </div>
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 bg-white border-2 border-line px-6 py-3 rounded-2xl font-bold hover:bg-stone-50 transition-all text-stone-600 self-start md:self-center"
-          >
-            <LogOut size={18} />
-            로그아웃
-          </button>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
