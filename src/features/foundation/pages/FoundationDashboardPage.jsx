@@ -657,6 +657,7 @@ function FoundationDashboardPage() {
 
   const handleSettingsSubmit = async (event) => {
     event.preventDefault();
+    if (!settingsEditMode) return;
 
     const feeRateNumber = Number(settingsForm.feeRate);
     if (
@@ -745,7 +746,9 @@ function FoundationDashboardPage() {
     }
   };
 
-  const handleStartSettingsEdit = () => {
+  const handleStartSettingsEdit = (event) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
     setSettingsMessage("");
     setSettingsError("");
     setPasswordForm({
@@ -753,7 +756,7 @@ function FoundationDashboardPage() {
       newPassword: "",
       confirmPassword: "",
     });
-    setSettingsEditMode(true);
+    setTimeout(() => setSettingsEditMode(true), 0);
   };
 
   const handleCancelSettingsEdit = () => {
@@ -860,6 +863,48 @@ function FoundationDashboardPage() {
     loadSettlementData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeMenu, foundation?.foundationNo]);
+
+  useEffect(() => {
+    if (activeMenu !== "home") {
+      return;
+    }
+
+    const foundationNoFromToken = getFoundationNoFromAccessToken();
+    const foundationNo = foundationNoFromToken || foundation?.foundationNo;
+    if (!foundationNo) {
+      return;
+    }
+
+    let ignore = false;
+    (async () => {
+      try {
+        const wallet = await fetchFoundationWalletInfo(foundationNo);
+        if (!ignore) {
+          setWalletInfo(wallet);
+        }
+      } catch {
+        // keep previous wallet info on transient errors
+      }
+    })();
+
+    return () => {
+      ignore = true;
+    };
+  }, [activeMenu, foundation?.foundationNo]);
+
+  useEffect(() => {
+    const root = document.documentElement;
+    const body = document.body;
+    const prevRootOverflow = root.style.overflow;
+    const prevBodyOverflow = body.style.overflow;
+    root.style.overflow = "hidden";
+    body.style.overflow = "hidden";
+
+    return () => {
+      root.style.overflow = prevRootOverflow;
+      body.style.overflow = prevBodyOverflow;
+    };
+  }, []);
 
   if (loading) {
     return (
@@ -1291,6 +1336,21 @@ function FoundationDashboardPage() {
                       className="fd-input"
                     />
                   </label>
+                  <button
+                    type="button"
+                    className="mt-3 w-full rounded-lg px-4 py-2 text-[1rem] font-semibold text-white disabled:cursor-not-allowed disabled:opacity-50"
+                    style={{ backgroundColor: BRAND_COLOR }}
+                    onClick={handleRedemptionSubmit}
+                    disabled={redeeming}
+                  >
+                    {redeeming ? "신청 중..." : "현금화 신청"}
+                  </button>
+                  {redemptionError ? (
+                    <p className="mt-2 text-sm text-rose-600">{redemptionError}</p>
+                  ) : null}
+                  {redemptionMessage ? (
+                    <p className="mt-2 text-sm text-emerald-600">{redemptionMessage}</p>
+                  ) : null}
                 </div>
                 {redemptionError && <p className="fd-error-text">{redemptionError}</p>}
                 {redemptionMessage && <p className="fd-success-text">{redemptionMessage}</p>}
