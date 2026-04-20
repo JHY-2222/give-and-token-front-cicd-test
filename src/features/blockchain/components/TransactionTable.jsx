@@ -12,20 +12,8 @@ function formatDateTime(value) {
   return `${year}/${month}/${day} ${hours}:${minutes}:${seconds}`;
 }
 
-function isGasChargeEvent(eventType, eventTypeLabel) {
-  const normalizedType = String(eventType || "").toUpperCase();
-  const normalizedLabel = String(eventTypeLabel || "").trim();
-
-  return (
-    normalizedType === "GAS_CHARGE" ||
-    normalizedType === "GAS_TOPUP" ||
-    normalizedType === "GAS_RECHARGE" ||
-    normalizedLabel === "가스 충전"
-  );
-}
-
 function getAmountUnit(transaction) {
-  return isGasChargeEvent(transaction.eventType, transaction.eventTypeLabel) ? "POL" : "GNT";
+  return String(transaction?.amountUnit || "").toUpperCase() === "POL" ? "POL" : "GNT";
 }
 
 function TransactionTable({ transactions }) {

@@ -47,18 +47,6 @@ function DetailCell({ label, value, linkTo }) {
   );
 }
 
-function isGasChargeEvent(eventType, eventTypeLabel) {
-  const normalizedType = String(eventType || "").toUpperCase();
-  const normalizedLabel = String(eventTypeLabel || "").trim();
-
-  return (
-    normalizedType === "GAS_CHARGE" ||
-    normalizedType === "GAS_TOPUP" ||
-    normalizedType === "GAS_RECHARGE" ||
-    normalizedLabel === "가스 충전"
-  );
-}
-
 function TransactionDetailPage() {
   const { txHash } = useParams();
   const [data, setData] = useState(null);
@@ -114,8 +102,7 @@ function TransactionDetailPage() {
     return <div className="panel empty-state">{error || "트랜잭션을 찾을 수 없습니다."}</div>;
   }
 
-  const isGasCharge = isGasChargeEvent(data.eventType, data.eventTypeLabel);
-  const amountUnit = isGasCharge ? "POL" : "GNT";
+  const amountUnit = String(data?.amountUnit || "").toUpperCase() === "POL" ? "POL" : "GNT";
 
   return (
     <section className="detail-page">

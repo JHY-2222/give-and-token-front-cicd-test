@@ -10,6 +10,10 @@ const OWNER_TYPE_LABELS = {
   SERVER: "서버",
   DONOR: "기부자"
 };
+const OWNER_TYPE_BY_LABEL = Object.entries(OWNER_TYPE_LABELS).reduce((acc, [type, label]) => {
+  acc[label] = type;
+  return acc;
+}, {});
 
 const EVENT_TYPE_LABELS = {
   DONATION: "기부",
@@ -82,6 +86,96 @@ function getOwnerTypeLabel(ownerType) {
   return OWNER_TYPE_LABELS[ownerType] || "미확인";
 }
 
+function getOwnerTypeByLabel(ownerTypeLabel) {
+  return OWNER_TYPE_BY_LABEL[String(ownerTypeLabel || "").trim()] || "";
+}
+
+function isPolSymbol(value) {
+  return String(value || "").trim().toUpperCase() === "POL";
+}
+
+function isGasChargeByEventType(eventType, eventTypeLabel) {
+  const normalizedType = String(eventType || "").toUpperCase();
+  const normalizedLabel = String(eventTypeLabel || "").trim();
+
+  return (
+    normalizedType === "GAS_CHARGE" ||
+    normalizedType === "GAS_TOPUP" ||
+    normalizedType === "GAS_RECHARGE" ||
+    normalizedLabel === "가스 충전"
+  );
+}
+
+function getTransactionAmountUnit(transaction) {
+  const explicitUnitCandidates = [
+    transaction?.amountUnit,
+    transaction?.unit,
+    transaction?.currency,
+    transaction?.symbol,
+    transaction?.tokenSymbol,
+    transaction?.assetSymbol,
+    transaction?.coinSymbol
+  ];
+
+  if (explicitUnitCandidates.some(isPolSymbol)) {
+    return "POL";
+  }
+
+  return isGasChargeByEventType(transaction?.eventType, transaction?.eventTypeLabel) ? "POL" : "GNT";
+}
+
+function resolveFromOwnerType(transaction) {
+  return (
+    String(transaction?.fromOwnerType || "").toUpperCase() ||
+    String(transaction?.fromWallet?.ownerType || "").toUpperCase() ||
+    getOwnerTypeByLabel(transaction?.fromOwnerTypeLabel)
+  );
+}
+
+function resolveToOwnerType(transaction) {
+  return (
+    String(transaction?.toOwnerType || "").toUpperCase() ||
+    String(transaction?.toWallet?.ownerType || "").toUpperCase() ||
+    getOwnerTypeByLabel(transaction?.toOwnerTypeLabel)
+  );
+}
+
+function getDashboardEventTypeLabel(transaction) {
+  const eventType = String(transaction?.eventType || "").toUpperCase();
+  const amountUnit = getTransactionAmountUnit(transaction);
+  const fromOwnerType = resolveFromOwnerType(transaction);
+  const toOwnerType = resolveToOwnerType(transaction);
+
+  if (amountUnit === "POL") {
+    return "가스 충전";
+  }
+
+  if (fromOwnerType === "SERVER" && toOwnerType === "DONOR") {
+    return "토큰화";
+  }
+
+  if (fromOwnerType === "DONOR" && toOwnerType === "CAMPAIGN") {
+    return "기부";
+  }
+
+  if (fromOwnerType === "CAMPAIGN" && toOwnerType === "FOUNDATION") {
+    return "수수료 지급";
+  }
+
+  if (fromOwnerType === "CAMPAIGN" && toOwnerType === "BENEFICIARY") {
+    return "기부금 정산";
+  }
+
+  if (
+    (fromOwnerType === "BENEFICIARY" || fromOwnerType === "FOUNDATION") &&
+    (eventType === "CASHOUT" || eventType === "WITHDRAWAL")
+  ) {
+    return "현금화(출금)";
+  }
+
+  return transaction?.eventTypeLabel || getEventTypeLabel(transaction?.eventType);
+}
+
 function normalizeWallet(wallet) {
   if (!wallet) {
     return null;
@@ -101,7 +195,8 @@ function normalizeTransaction(transaction) {
 
   return {
     ...transaction,
-    eventTypeLabel: transaction.eventTypeLabel || getEventTypeLabel(transaction.eventType),
+    amountUnit: getTransactionAmountUnit(transaction),
+    eventTypeLabel: getDashboardEventTypeLabel(transaction),
     fromOwnerTypeLabel:
       transaction.fromOwnerTypeLabel ||
       transaction.fromWallet?.ownerTypeLabel ||
