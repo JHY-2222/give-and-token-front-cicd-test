@@ -315,7 +315,7 @@ export default function DonationReturnPage() {
             메인으로 돌아가기
           </Link>
           <Link
-            to="/mypage/history"
+            to="/mypage/donation-history"
             className="inline-flex w-full items-center justify-center rounded-xl border border-stone-200 bg-white py-3 text-sm font-bold text-ink shadow-sm transition-colors hover:border-primary hover:bg-primary hover:text-white"
           >
             기부내역 보러가기
