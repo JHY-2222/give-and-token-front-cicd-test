@@ -224,7 +224,7 @@ export default function DonationReturnPage() {
         </div>
       )}
 
-      <div className="mx-auto max-w-3xl pb-10 pt-[calc(4rem+40px)]">
+      <div className="mx-auto max-w-3xl pb-10 pt-[calc(4rem+96px)]">
         <section className="mb-10 text-center">
           {status === "loading" ? (
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-stone-100">
@@ -247,9 +247,6 @@ export default function DonationReturnPage() {
           <h1 className="mb-4 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
             {title}
           </h1>
-          <p className="mx-auto max-w-2xl break-keep text-lg font-medium leading-relaxed text-stone-500">
-            {description}
-          </p>
 
         </section>
 
@@ -277,9 +274,6 @@ export default function DonationReturnPage() {
                 <strong className="block break-keep text-2xl font-bold text-ink">
                   {paymentSummary?.title ?? "캠페인 정보 확인 중"}
                 </strong>
-                <p className="mt-2 break-keep text-sm leading-6 text-stone-500">
-                  {paymentSummary?.summary ?? "선택한 캠페인에 기부가 전달되었습니다."}
-                </p>
               </div>
               <div className="text-right text-2xl font-bold text-ink">
                 {formatAmount(result?.amount ?? paymentSummary?.amount ?? amount)}
@@ -316,13 +310,13 @@ export default function DonationReturnPage() {
         <div className="mt-10 grid grid-cols-2 gap-3">
           <Link
             to="/"
-            className="inline-flex w-full items-center justify-center rounded border border-stone-200 bg-white py-3 text-sm font-bold text-ink transition-colors hover:border-primary hover:bg-primary hover:text-white"
+            className="inline-flex w-full items-center justify-center rounded-xl border border-stone-200 bg-white py-3 text-sm font-bold text-ink shadow-sm transition-colors hover:border-primary hover:bg-primary hover:text-white"
           >
             메인으로 돌아가기
           </Link>
           <Link
             to="/mypage/history"
-            className="inline-flex w-full items-center justify-center rounded border border-stone-200 bg-white py-3 text-sm font-bold text-ink transition-colors hover:border-primary hover:bg-primary hover:text-white"
+            className="inline-flex w-full items-center justify-center rounded-xl border border-stone-200 bg-white py-3 text-sm font-bold text-ink shadow-sm transition-colors hover:border-primary hover:bg-primary hover:text-white"
           >
             기부내역 보러가기
           </Link>
