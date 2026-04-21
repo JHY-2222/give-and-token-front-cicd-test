@@ -27,6 +27,7 @@ const HOME_HUB_POLL_INTERVAL_MS = 15 * 1000;
 const LIVE_FEED_COUNT = 5;
 
 const EMPTY_SUMMARY = {
+  totalDonationAmount: null,
   totalDonationCount: 0,
   totalUserCount: 0,
   totalCampaignCount: 0,
@@ -173,6 +174,7 @@ function toHomeState(data) {
 
   return {
     summary: {
+      totalDonationAmount: Number(data?.totalDonationAmount ?? NaN),
       totalDonationCount: Number(data?.totalDonationCount ?? 0),
       totalUserCount: Number(data?.totalUserCount ?? 0),
       totalCampaignCount: Number(data?.totalCampaignCount ?? 0),
@@ -382,6 +384,8 @@ export default function HomeCampaignHub() {
   const [endingSoon, setEndingSoon] = useState([]);
   const [topProgress, setTopProgress] = useState([]);
   const [latestCampaigns, setLatestCampaigns] = useState([]);
+  const [isLatestCampaignsLoading, setIsLatestCampaignsLoading] =
+    useState(true);
   const [campaigns, setCampaigns] = useState([]);
   const [feedItems, setFeedItems] = useState([]);
   const [isFeedLoading, setIsFeedLoading] = useState(true);
@@ -398,7 +402,6 @@ export default function HomeCampaignHub() {
       setSummary(homeState.summary);
       setEndingSoon(homeState.endingSoon);
       setTopProgress(homeState.topProgress);
-      setLatestCampaigns(homeState.latestOngoing);
       setCampaigns(homeState.campaigns);
     }
 
@@ -451,6 +454,7 @@ export default function HomeCampaignHub() {
         .slice(0, 5);
 
       const payload = {
+        totalDonationAmount: Number(stats?.totalDonationAmount ?? NaN),
         totalDonationCount: Number(stats?.totalDonationCount ?? 0),
         totalUserCount: Number(stats?.totalUserCount ?? 0),
         totalCampaignCount: Number(stats?.totalCampaignCount ?? 0),
@@ -462,6 +466,80 @@ export default function HomeCampaignHub() {
       };
 
       return toHomeState(payload);
+    }
+
+    async function loadAdminSummaryAmount() {
+      const adminAccessToken =
+        window.localStorage.getItem("adminAccessToken") ?? "";
+
+      if (!adminAccessToken) {
+        return null;
+      }
+
+      try {
+        const response = await fetch("/admin-api/dashboard/summary", {
+          headers: {
+            Authorization: `Bearer ${adminAccessToken}`,
+          },
+        });
+
+        if (!response.ok) {
+          return null;
+        }
+
+        const data = await response.json();
+        const amount = Number(data?.totalDonationAmount ?? NaN);
+        return Number.isFinite(amount) ? amount : null;
+      } catch {
+        return null;
+      }
+    }
+
+    async function loadPublicTotalDonationAmount() {
+      try {
+        const summaryResponse = await fetch(
+          `${API_BASE_URL}/api/blockchain/summary?status=SUCCESS`,
+        );
+        if (!summaryResponse.ok) {
+          return null;
+        }
+
+        const summaryData = await summaryResponse.json();
+        const summaryAmount = Number(
+          summaryData?.totalDonationAmount ??
+            summaryData?.donationTokenAmount ??
+            summaryData?.donationAmount ??
+            NaN,
+        );
+        if (Number.isFinite(summaryAmount)) {
+          return summaryAmount;
+        }
+      } catch {
+        // ignore and fallback to campaign sum
+      }
+
+      try {
+        const campaignsResponse = await fetch(
+          `${API_BASE_URL}/api/foundation/campaigns?sort=deadline`,
+        );
+        if (!campaignsResponse.ok) {
+          return null;
+        }
+
+        const campaignList = await campaignsResponse.json();
+        if (!Array.isArray(campaignList)) {
+          return null;
+        }
+
+        const totalFromCampaigns = campaignList.reduce((sum, campaign) => {
+          const amount = Number(campaign?.currentAmount ?? 0);
+          return sum + (Number.isFinite(amount) ? amount : 0);
+        }, 0);
+
+        return totalFromCampaigns;
+      } catch {
+        return null;
+      }
     }
 
     async function loadHomeHub() {
@@ -523,6 +601,7 @@ export default function HomeCampaignHub() {
 
     async function loadLatestCampaigns() {
       try {
+        setIsLatestCampaignsLoading(true);
         const response = await fetch(
           `${API_BASE_URL}/api/donation/public/latest-campaigns?limit=5`,
         );
@@ -535,16 +614,14 @@ export default function HomeCampaignHub() {
 
         const data = await response.json();
 
-        console.log("latest raw data:", data);
-        console.log(
-          "latest mapped data:",
-          Array.isArray(data) ? data.map(toCampaignCard) : [],
-        );
-
         const latestList = toArrayPayload(data).map(toCampaignCard);
         if (!ignore) setLatestCampaigns(latestList);
       } catch (error) {
         console.error("현재 진행중인 캠페인 조회 실패:", error);
+      } finally {
+        if (!ignore) {
+          setIsLatestCampaignsLoading(false);
+        }
       }
     }
 
@@ -589,11 +666,23 @@ export default function HomeCampaignHub() {
 
       isFetching = true;
       try {
-        await Promise.all([
+        const [, , , adminSummaryAmount, publicSummaryAmount] = await Promise.all([
           loadHomeHub(),
           loadRecentFeed(),
           loadLatestCampaigns(),
+          loadAdminSummaryAmount(),
+          loadPublicTotalDonationAmount(),
         ]);
+
+        const resolvedSummaryAmount =
+          Number.isFinite(adminSummaryAmount) ? adminSummaryAmount : publicSummaryAmount;
+
+        if (!ignore && Number.isFinite(resolvedSummaryAmount)) {
+          setSummary((prev) => ({
+            ...prev,
+            totalDonationAmount: resolvedSummaryAmount,
+          }));
+        }
       } finally {
         isFetching = false;
       }
@@ -616,11 +705,21 @@ export default function HomeCampaignHub() {
   }, []);
 
   const totalRaisedAmount = useMemo(() => {
+    const summaryAmount = Number(summary?.totalDonationAmount ?? NaN);
+    if (Number.isFinite(summaryAmount)) {
+      return summaryAmount;
+    }
+
     return campaigns.reduce((sum, item) => {
       const amount = Number(item?.raised ?? 0);
       return sum + (Number.isFinite(amount) ? amount : 0);
     }, 0);
-  }, [campaigns]);
+  }, [campaigns, summary?.totalDonationAmount]);
+
+  const shouldShowCheckingAmount = useMemo(() => {
+    const summaryAmount = Number(summary?.totalDonationAmount ?? NaN);
+    return !Number.isFinite(summaryAmount);
+  }, [summary?.totalDonationAmount]);
 
   return (
     <section
@@ -632,7 +731,9 @@ export default function HomeCampaignHub() {
           <div className="rounded-[1.5rem] border border-primary/20 bg-primary px-8 py-7 text-white shadow-lg shadow-primary/20">
             <p className="text-sm font-bold text-white/80">누적 기부 금액</p>
             <p className="mt-3 text-4xl font-display font-bold">
-              {formatWon(totalRaisedAmount)}
+              {shouldShowCheckingAmount
+                ? "정산액 확인중..."
+                : formatWon(totalRaisedAmount)}
             </p>
           </div>
 
@@ -709,6 +810,10 @@ export default function HomeCampaignHub() {
                     campaign={item}
                   />
                 ))
+              ) : isLatestCampaignsLoading ? (
+                <div className="rounded-2xl border border-line bg-white p-6 text-sm font-bold text-stone-500">
+                  캠페인을 불러오고 있습니다...
+                </div>
               ) : (
                 <div className="rounded-2xl border border-line bg-white p-6 text-sm font-bold text-stone-500">
                   현재 진행중인 캠페인이 없습니다.

@@ -198,6 +198,7 @@
   color: var(--color-ink);
   transition: all 0.3s ease;
   font-family: 'Quicksand', 'Noto Sans KR', sans-serif;
+  caret-color: var(--color-primary);
 }
 
 .signup-input:focus {
@@ -205,6 +206,23 @@
   border-color: var(--color-primary);
   background-color: var(--color-white);
   box-shadow: 0 0 0 5px rgba(255, 138, 101, 0.1);
+}
+
+.signup-input:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 5px rgba(255, 138, 101, 0.16);
+}
+
+.signup-input:-webkit-autofill,
+.signup-input:-webkit-autofill:hover,
+.signup-input:-webkit-autofill:focus,
+.signup-input:-webkit-autofill:active {
+  -webkit-text-fill-color: var(--color-ink) !important;
+  caret-color: var(--color-primary);
+  border-color: #ffb39c !important;
+  box-shadow: 0 0 0 1000px #fff4ef inset !important;
+  transition: background-color 9999s ease-in-out 0s;
 }
 
 .signup-input:focus + .input-icon {

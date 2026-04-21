@@ -71,7 +71,7 @@ export default function Navbar() {
 
   return (
       <nav className="fixed top-6 left-1/2 -translate-x-1/2 z-50 w-[90%] max-w-5xl">
-        <div className="bg-white/90 backdrop-blur-xl border-4 border-line rounded-[2rem] px-8 py-4 shadow-xl shadow-primary/5">
+        <div className="bg-white/90 backdrop-blur-xl border-4 border-line rounded-[2rem] px-8 py-4 shadow-lg shadow-primary/5">
           <div className="flex justify-between items-center">
             <Link to="/" className="flex items-center gap-3 group">
               <div className="w-12 h-12 bg-primary flex items-center justify-center text-white rounded-2xl rotate-6 group-hover:rotate-0
