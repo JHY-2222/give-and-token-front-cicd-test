@@ -558,11 +558,11 @@ function DashboardHome({ onNavigate, navigate, donationDays, userDays, onDonatio
                 {userTrend.map((p, i) => i % xStepU !== 0 ? null : (
                   <text key={i} x={ptXU(i)} y={UC.H - UC.pB + 14} textAnchor="middle" fontSize="10" fill="#94a3b8">{p.date.slice(5)}</text>
                 ))}
-                <path d={linePathU} fill="none" stroke="#7c3aed" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                <path d={linePathU} fill="none" stroke="#FFB499" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
                 {userTooltip && (
                   <>
-                    <line x1={userTooltip.x} y1={UC.pT} x2={userTooltip.x} y2={UC.pT + UC.cH} stroke="#ede9fe" strokeWidth={1} strokeDasharray="4 3" />
-                    <circle cx={userTooltip.x} cy={userTooltip.y} r={4} fill="#7c3aed" stroke="#fff" strokeWidth={2} />
+                    <line x1={userTooltip.x} y1={UC.pT} x2={userTooltip.x} y2={UC.pT + UC.cH} stroke="#ffe4d6" strokeWidth={1} strokeDasharray="4 3" />
+                    <circle cx={userTooltip.x} cy={userTooltip.y} r={4} fill="#FFB499" stroke="#fff" strokeWidth={2} />
                   </>
                 )}
               </svg>
