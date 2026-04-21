@@ -8,9 +8,8 @@ export default function ProfileCard({
   onChangePassword,
   onViewDonations,
 }) {
-<<<<<<< HEAD
   const { pathname } = useLocation();
-  const IMAGE_BASE_URL = "http://localhost:8090/uploads/";
+  const IMAGE_BASE_URL = "/uploads/";
 
   const isHome = pathname === "/mypage";
   const isProfileEdit = pathname === "/mypage/profile-edit";
@@ -30,10 +29,7 @@ export default function ProfileCard({
   const getMenuIconClass = (isActive) =>
     `transition-colors ${isActive ? "text-white" : "text-white/60 group-hover:text-white"}`;
 
-=======
-  const IMAGE_BASE_URL = "/uploads/";
   
->>>>>>> main
   const getProfileImage = () => {
     if (!myInfo?.profilePath) return null;
     return myInfo.profilePath.startsWith("http")
