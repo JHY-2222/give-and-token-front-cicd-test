@@ -12,7 +12,7 @@
   position: absolute;
   right: 0;
   bottom: 0;
-  width: 35%;
+  width: 38%;
   height: 84%;
   border-radius: 280px 280px 0 0;
   background: #fde7d5;
@@ -149,7 +149,7 @@
 .login-password-toggle {
   position: absolute;
   top: 50%;
-  right: 14px;
+  right: 18px;
   transform: translateY(-50%);
   border: 0;
   background: transparent;
@@ -200,13 +200,14 @@
   margin-top: 4px;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: stretch;
 }
 
 .login-inline-links {
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: space-between;
+  width: 100%;
 }
 
 .login-inline-link {
@@ -313,4 +314,382 @@
     width: 100%;
     max-width: 460px;
   }
+}
+
+.email-find-modal {
+  padding: 20px 24px 24px;
+  background: #fffdfb;
+}
+
+.email-find-modal__content {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.email-find-modal__hint {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  border: 1px solid #f4d9cf;
+  background: #fff4ef;
+  border-radius: 16px;
+  padding: 12px 14px;
+  color: #8c7062;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.email-find-modal__hint svg {
+  color: #ff8a65;
+  flex: 0 0 auto;
+  margin-top: 1px;
+}
+
+.email-find-modal__fields {
+  display: grid;
+  gap: 10px;
+}
+
+.email-find-modal__label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #8b7568;
+  margin-left: 8px;
+}
+
+.email-find-modal__input-wrap {
+  position: relative;
+}
+
+.email-find-modal__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a38f82;
+}
+
+.email-find-modal__input {
+  width: 100%;
+  height: 50px;
+  border-radius: 999px;
+  border: 1.5px solid #cfbeb2;
+  background: transparent;
+  color: #4e342e;
+  padding: 0 14px 0 42px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.email-find-modal__input::placeholder {
+  color: #a29185;
+}
+
+.email-find-modal__input:focus {
+  border-color: #ff8a65;
+  box-shadow: 0 0 0 3px rgba(255, 138, 101, 0.16);
+}
+
+.email-find-modal__submit {
+  width: 100%;
+  height: 50px;
+  border-radius: 999px;
+  border: 0;
+  background: color-mix(in srgb, var(--color-primary, #ff8a65) 30%, white);
+  color: var(--color-ink, #4e342e);
+  font-weight: 800;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.email-find-modal__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.email-find-modal__message {
+  margin: 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+.email-find-modal__message--error {
+  background: #fff1f1;
+  border: 1px solid #ffd6d6;
+  color: #d64b4b;
+}
+
+.email-find-modal__result {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  text-align: center;
+  padding: 8px 0;
+}
+
+.email-find-modal__badge {
+  width: 54px;
+  height: 54px;
+  border-radius: 999px;
+  border: 1px solid #ffd5c5;
+  background: #fff4ef;
+  color: #ff8a65;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.email-find-modal__result-box {
+  width: 100%;
+  border: 1px solid #ffd5c5;
+  border-radius: 16px;
+  background: #fff8f4;
+  padding: 14px;
+}
+
+.email-find-modal__result-label {
+  margin: 0 0 6px;
+  font-size: 0.78rem;
+  color: #907c70;
+}
+
+.email-find-modal__result-email {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: #4e342e;
+  word-break: break-all;
+}
+
+.email-find-modal__result-note {
+  margin: 0;
+  font-size: 0.74rem;
+  color: #9b8b80;
+}
+
+.email-find-modal__actions {
+  width: 100%;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.email-find-modal__btn {
+  height: 46px;
+  border-radius: 999px;
+  border: 0;
+  font-size: 0.92rem;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.email-find-modal__btn--ghost {
+  border: 1px solid #d9ccc3;
+  background: #fff;
+  color: #6f5b4f;
+}
+
+.email-find-modal__btn--primary {
+  background: var(--color-primary, #ff8a65);
+  color: #fff;
+}
+
+.password-reset-modal {
+  padding: 20px 24px 24px;
+  background: #fffdfb;
+}
+
+.password-reset-modal__steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.password-reset-modal__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.password-reset-modal__step-dot {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 1px solid #ddcec4;
+  background: #fff;
+  color: #9a897d;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.password-reset-modal__step-dot.is-active {
+  border-color: #ff8a65;
+  background: #ff8a65;
+  color: #fff;
+}
+
+.password-reset-modal__step-label {
+  font-size: 0.68rem;
+  color: #a08f84;
+  font-weight: 700;
+}
+
+.password-reset-modal__step-label.is-active {
+  color: #6a5548;
+}
+
+.password-reset-modal__section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.password-reset-modal__hint {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  border: 1px solid #f4d9cf;
+  background: #fff4ef;
+  border-radius: 16px;
+  padding: 12px 14px;
+  color: #8c7062;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+.password-reset-modal__hint svg {
+  color: #ff8a65;
+  margin-top: 1px;
+  flex: 0 0 auto;
+}
+
+.password-reset-modal__hint--ok {
+  border-color: #d7efe3;
+  background: #f3fbf7;
+  color: #4f7a63;
+}
+
+.password-reset-modal__hint--ok svg {
+  color: #4ea37a;
+}
+
+.password-reset-modal__label {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: #8b7568;
+  margin-left: 8px;
+}
+
+.password-reset-modal__input-wrap {
+  position: relative;
+}
+
+.password-reset-modal__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #a38f82;
+}
+
+.password-reset-modal__input {
+  width: 100%;
+  height: 50px;
+  border-radius: 999px;
+  border: 1.5px solid #cfbeb2;
+  background: transparent;
+  color: #4e342e;
+  padding: 0 14px 0 42px;
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.password-reset-modal__input::placeholder {
+  color: #a29185;
+}
+
+.password-reset-modal__input:focus {
+  border-color: #ff8a65;
+  box-shadow: 0 0 0 3px rgba(255, 138, 101, 0.16);
+}
+
+.password-reset-modal__input--center {
+  text-align: center;
+  padding-left: 14px;
+  letter-spacing: 0.24em;
+  font-weight: 700;
+}
+
+.password-reset-modal__submit {
+  width: 100%;
+  height: 50px;
+  border-radius: 999px;
+  border: 0;
+  background: color-mix(in srgb, var(--color-primary, #ff8a65) 30%, white);
+  color: var(--color-ink, #4e342e);
+  font-weight: 800;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.password-reset-modal__submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.password-reset-modal__submit--dark {
+  background: #4e342e;
+  color: #fff;
+}
+
+.password-reset-modal__text-btn {
+  border: 0;
+  background: transparent;
+  color: #8f7d71;
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.password-reset-modal__message {
+  margin: 12px 0 0;
+  border-radius: 12px;
+  padding: 10px 12px;
+  font-size: 0.86rem;
+  text-align: center;
+}
+
+.password-reset-modal__message.is-ok {
+  background: #f3fbf7;
+  border: 1px solid #d7efe3;
+  color: #4f7a63;
+}
+
+.password-reset-modal__message.is-error {
+  background: #fff1f1;
+  border: 1px solid #ffd6d6;
+  color: #d64b4b;
 }

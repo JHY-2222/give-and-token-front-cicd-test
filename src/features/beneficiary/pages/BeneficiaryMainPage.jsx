@@ -287,7 +287,7 @@ const BeneficiaryMainPage = () => {
         </p>
       </header>
 
-      <div className="mypage-layout-shell scrollbar-hide">
+      <div className="mypage-layout-shell beneficiary-layout-shell scrollbar-hide">
         <aside className="mypage-layout-nav scrollbar-hide">
           <div className="lg:sticky lg:top-48 h-full">
             <div className="space-y-4">

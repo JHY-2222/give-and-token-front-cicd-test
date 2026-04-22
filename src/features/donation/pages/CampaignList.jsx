@@ -313,9 +313,9 @@ export default function CampaignList() {
                     key={item.label}
                     type="button"
                     onClick={() => handleSelectCategory(item.label)}
-                    className={`inline-flex h-12 shrink-0 items-center gap-2 rounded-full border-[1.5px] px-4 text-base font-bold transition-all hover:-translate-y-1 ${
+                    className={`inline-flex h-14 shrink-0 items-center gap-2 rounded-full border-2 px-5 text-[15px] font-extrabold transition-all hover:-translate-y-1 ${
                       selectedCategory === item.label
-                        ? "border-primary bg-primary text-white"
+                        ? "border-primary bg-primary text-white shadow-[0_8px_16px_-10px_rgba(255,138,101,0.55)] ring-2 ring-primary/30"
                         : "border-line bg-white text-ink hover:border-primary/40"
                     }`}
                     aria-pressed={selectedCategory === item.label}
@@ -335,21 +335,21 @@ export default function CampaignList() {
             </div>
 
             <div className="mt-4">
-              <div className="flex overflow-hidden rounded-full border-4 border-primary/90 bg-[#FFF8F2]">
+              <div className="flex overflow-hidden rounded-full border-2 border-primary/25 bg-white">
                 <input
                   ref={searchInputRef}
                   type="text"
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="어떤 캠페인을 찾고 있나요?"
-                  className="w-full border-none bg-[#FFFEFC] pl-10 pr-8 py-5 text-lg font-bold text-[#4F332C] placeholder:text-primary/70 caret-primary/70 outline-none focus:outline-none focus:ring-0"
+                  className="w-full border-none bg-transparent pl-8 pr-5 py-3.5 text-base font-semibold text-ink placeholder:text-stone-400 caret-primary outline-none focus:outline-none focus:ring-0"
                 />
                 <button
                   type="button"
-                  className="shrink-0 grid w-[74px] place-items-center border-none bg-primary/90 text-white outline-none transition-colors hover:bg-primary focus:outline-none focus:ring-0"
+                  className="shrink-0 grid w-14 place-items-center border-none border-l border-primary/20 bg-[#FFF7F1] text-primary outline-none transition-colors hover:bg-primary/10 focus:outline-none focus:ring-0"
                   aria-label="검색"
                 >
-                  <Search size={28} strokeWidth={2.2} />
+                  <Search size={22} strokeWidth={2.2} />
                 </button>
               </div>
               <div className="mt-3 flex justify-end pr-2 md:pr-3">
@@ -387,7 +387,7 @@ export default function CampaignList() {
         )}
 
         {!isLoading && !error && (
-          <div className="mt-8">
+          <div className="mt-14">
           <div className="grid gap-12 md:grid-cols-2 lg:grid-cols-3">
             {visibleCampaigns.map((camp) => {
               const normalizedCategory = normalizeCategory(camp.category);
@@ -466,7 +466,7 @@ export default function CampaignList() {
         )}
 
         {!isLoading && !error && visibleCampaigns.length === 0 && (
-          <div className="mt-16 bg-white border-4 border-line rounded-[3rem] p-12 text-center">
+          <div className="mt-16 bg-white rounded-[3rem] p-12 text-center">
             <div className="mx-auto mb-6 h-40 w-40 overflow-hidden">
               <img
                 src={EMPTY_RESULT_IMAGE}

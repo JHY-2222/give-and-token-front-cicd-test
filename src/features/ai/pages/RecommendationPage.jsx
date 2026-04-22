@@ -306,8 +306,8 @@ const RecommendationPage = () => {
         {/* AI Search Box */}
         <div className="max-w-4xl mx-auto mb-20">
           <form onSubmit={handleSearch}>
-            <div className="flex items-stretch overflow-hidden rounded-full border-4 border-primary/90 bg-white shadow-sm">
-              <div className="shrink-0 grid w-20 place-items-center text-stone-400">
+            <div className="flex items-stretch overflow-hidden rounded-full border-2 border-primary/25 bg-white">
+              <div className="shrink-0 grid w-16 place-items-center text-stone-400">
                 <Search size={24} />
               </div>
               <input
@@ -315,19 +315,19 @@ const RecommendationPage = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="예: '어려운 환경에서 꿈을 키우는 아이들을 돕고 싶어요'"
-                className="w-full border-none bg-transparent py-5 pr-8 text-lg font-bold text-[#4F332C] placeholder:text-primary/90 caret-primary outline-none focus:outline-none focus:ring-0"
+                className="w-full border-none bg-transparent py-3.5 pr-5 text-base font-semibold text-ink placeholder:text-stone-400 caret-primary outline-none focus:outline-none focus:ring-0"
               />
               <button
                 type="submit"
                 disabled={isLoading}
-                className="shrink-0 inline-flex min-w-[120px] items-center justify-center gap-2 self-stretch rounded-none rounded-r-full border-none bg-primary/90 px-4 py-5 text-white outline-none transition-colors hover:bg-primary focus:outline-none focus:ring-0 disabled:opacity-50"
+                className="shrink-0 inline-flex min-w-[120px] items-center justify-center gap-2 self-stretch rounded-none rounded-r-full border-none border-l border-primary/20 bg-[#FFF7F1] px-4 py-3.5 text-primary outline-none transition-colors hover:bg-primary/10 focus:outline-none focus:ring-0 disabled:opacity-50"
               >
                 {isLoading ? (
                   <Loader2 className="animate-spin" size={20} />
                 ) : (
-                  <Sparkles size={20} strokeWidth={2.8} className="text-white" />
+                  <Sparkles size={20} strokeWidth={2.8} className="text-primary" />
                 )}
-                <span className="font-black tracking-tight text-white">추천받기</span>
+                <span className="font-black tracking-tight text-primary">추천받기</span>
               </button>
             </div>
           </form>
@@ -381,16 +381,16 @@ const RecommendationPage = () => {
               exit={{ opacity: 0, x: -20 }}
             >
               {!isLoggedIn ? (
-                <div className="bg-white border-4 border-line rounded-[2.5rem] p-16 text-center shadow-sm">
+                <div className="py-8 text-center">
                   <div className="w-20 h-20 bg-stone-100 rounded-3xl flex items-center justify-center mx-auto mb-8">
                     <Heart size={40} className="text-stone-400" />
                   </div>
                   <h2 className="text-3xl font-display font-bold text-ink mb-4">로그인이 필요한 서비스입니다</h2>
-                  <p className="text-stone-500 font-medium mb-8 max-w-md mx-auto">
+                  <p className="text-stone-500 font-medium mb-10 max-w-md mx-auto">
                     회원님의 기부 패턴을 분석하여 맞춤 캠페인을 추천해 드려요.<br />
                     로그인하고 특별한 기부 제안을 만나보세요!
                   </p>
-                  <Link to="/login" className="btn-fairytale px-12 py-4 inline-block">로그인하러 가기</Link>
+                  <Link to="/login" className="btn-fairytale !inline-flex !px-5 !py-3 text-base">로그인하러 가기</Link>
                 </div>
               ) : historyRecommendations.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">

@@ -202,7 +202,7 @@ export default function FoundationSignupPage() {
                 </FormField>
 
                 <FormField label="연락처">
-                  <input className="fs-input" name="contactPhone" value={form.contactPhone} onChange={handleChange} placeholder="010-0000-0000" required />
+                  <input className="fs-input" name="contactPhone" value={form.contactPhone} onChange={handleChange} placeholder="01000000000" required />
                 </FormField>
 
                 {/* 사업자등록번호 */}

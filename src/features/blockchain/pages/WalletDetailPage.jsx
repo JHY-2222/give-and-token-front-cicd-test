@@ -100,7 +100,7 @@ function WalletDetailPage() {
           </p>
         </div>
 
-        <Link to="/blockchain" className="ghost-button">
+        <Link to="/blockchain" className="ghost-button" aria-label="목록으로" title="목록으로">
           목록으로
         </Link>
       </div>
