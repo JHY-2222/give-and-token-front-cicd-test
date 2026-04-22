@@ -218,14 +218,13 @@ const SignupPage = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div className="signup-header">
-          <p className="signup-title">회원가입</p>
-          <p className="signup-subtitle">하나뿐인 여정의 나눔을 시작해보세요</p>
-        </div>
-
         <form onSubmit={handleSubmit} className="signup-form">
           <div className="signup-form-layout">
             <aside className="signup-form-layout__left">
+              <div className="signup-header">
+                <p className="signup-title">회원가입</p>
+                <p className="signup-subtitle">하나뿐인 여정의 나눔을 시작해보세요</p>
+              </div>
               <SignupRoleSelector role={formData.role} onChange={handleChange} />
             </aside>
 

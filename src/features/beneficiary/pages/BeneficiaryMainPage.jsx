@@ -1,15 +1,23 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { 
-  User, Wallet, FileText, Settings, LogOut, 
-  RefreshCw, ChevronRight, PlusCircle, CheckCircle, 
-  AlertCircle, ExternalLink, Clipboard, X, Upload, Info, Trash2, Camera, Banknote
+  Wallet, FileText, Settings, 
+  RefreshCw, ChevronRight, PlusCircle, CheckCircle,
+  AlertCircle, Clipboard, X, Upload, Trash2, Camera, Banknote
 } from "lucide-react";
 import { beneficiaryApi } from "../api/beneficiaryApi";
+import "../../myPageUser/styles/MyPage.css";
+
+const formatTokenAmount = (value) => {
+  const amount = Number(value);
+  if (!Number.isFinite(amount)) return "0";
+  return amount.toLocaleString("ko-KR", { maximumFractionDigits: 2 });
+};
 
 const BeneficiaryMainPage = () => {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [campaignsLoading, setCampaignsLoading] = useState(true);
   const [userInfo, setUserInfo] = useState(null);
   const [reports, setReports] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
@@ -33,6 +41,47 @@ const BeneficiaryMainPage = () => {
     images: [] // { file, preview, purpose }
   });
 
+  const reportedCampaignNos = useMemo(
+    () =>
+      new Set(
+        (reports || [])
+          .map((report) => Number(report?.campaignNo ?? report?.campaign_no))
+          .filter((campaignNo) => Number.isFinite(campaignNo))
+      ),
+    [reports]
+  );
+
+  const pendingReportCampaigns = useMemo(() => {
+    return (campaigns || []).filter((campaign) => {
+      const campaignNo = Number(campaign?.campaignNo ?? campaign?.campaign_no);
+      if (!Number.isFinite(campaignNo)) return true;
+      return !reportedCampaignNos.has(campaignNo);
+    });
+  }, [campaigns, reportedCampaignNos]);
+
+  const formatCampaignDate = (value) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleDateString("ko-KR");
+  };
+
+  const getCampaignStatusLabel = (status) => {
+    switch (String(status || "").toUpperCase()) {
+      case "RECRUITING":
+      case "ACTIVE":
+        return "진행중";
+      case "ENDED":
+        return "종료";
+      case "COMPLETED":
+        return "완료";
+      case "CANCELLED":
+        return "취소";
+      default:
+        return "상태확인";
+    }
+  };
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -40,6 +89,7 @@ const BeneficiaryMainPage = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      setCampaignsLoading(true);
       const [info, reportsData, campaignsData] = await Promise.all([
         beneficiaryApi.getMyInfo(),
         beneficiaryApi.getMyReports(),
@@ -53,22 +103,8 @@ const BeneficiaryMainPage = () => {
     } catch (error) {
       console.error("데이터 로드 중 오류 발생:", error);
     } finally {
+      setCampaignsLoading(false);
       setLoading(false);
-    }
-  };
-
-  const handleLogout = async () => {
-    try {
-      await fetch("/api/beneficiary/logout", { method: "POST" });
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("userRole");
-      alert("로그아웃 되었습니다.");
-      navigate("/login");
-    } catch (error) {
-      console.error("로그아웃 오류:", error);
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("userRole");
-      navigate("/login");
     }
   };
 
@@ -220,6 +256,13 @@ const BeneficiaryMainPage = () => {
     }
   };
 
+  const getTabButtonClass = (tabName) =>
+    `w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-[15px] transition-all ${
+      activeTab === tabName
+        ? "bg-primary text-white shadow-lg shadow-primary/20"
+        : "text-stone-500 hover:bg-surface"
+    }`;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
@@ -229,81 +272,85 @@ const BeneficiaryMainPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-surface font-sans text-ink">
-      <div className="w-[90%] max-w-5xl mx-auto py-10 pt-36">
-        
-        <header className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12">
-          <div className="flex items-center gap-5">
-            <div className="w-20 h-20 bg-primary rounded-3xl flex items-center justify-center text-white shadow-xl shadow-primary/20 rotate-3">
-              <User size={40} />
-            </div>
-            <div>
-              <h1 className="text-3xl font-display font-bold">안녕하세요, <span className="text-primary">{userInfo?.name}</span>님!</h1>
-              <p className="text-stone-500 font-medium">수혜자 대시보드에서 후원 현황과 보고서를 관리하세요.</p>
+    <div className="mypage-main-page scrollbar-hide font-sans text-ink" style={{ zoom: 1.08 }}>
+      <header className="mb-6 px-1">
+        <div className="flex items-center gap-3 mb-2">
+          <span className="px-3 py-1 rounded-full bg-orange-100 text-primary text-[10px] font-black uppercase tracking-widest">
+            수혜자
+          </span>
+        </div>
+        <h1 className="text-3xl font-black text-ink tracking-tight !mb-0 !text-left">
+          반갑습니다, <span className="text-primary">{userInfo?.name || "수혜자"}</span>님
+        </h1>
+        <p className="text-ink/40 mt-3 text-sm font-medium">
+          후원 현황과 보고서를 한 곳에서 관리하세요.
+        </p>
+      </header>
+
+      <div className="mypage-layout-shell beneficiary-layout-shell scrollbar-hide">
+        <aside className="mypage-layout-nav scrollbar-hide">
+          <div className="lg:sticky lg:top-48 h-full">
+            <div className="space-y-4">
+              <nav className="bg-white rounded-xl p-4 shadow-sm border-4 border-line">
+                <button onClick={() => setActiveTab("dashboard")} className={getTabButtonClass("dashboard")}>
+                  <Wallet size={18} />
+                  내 현황 및 지갑
+                </button>
+                <button onClick={() => setActiveTab("campaigns")} className={getTabButtonClass("campaigns")}>
+                  <FileText size={18} />
+                  참여한 캠페인
+                </button>
+                <button onClick={() => setActiveTab("reports")} className={getTabButtonClass("reports")}>
+                  <CheckCircle size={18} />
+                  보고서
+                </button>
+                <button onClick={() => setActiveTab("profile")} className={getTabButtonClass("profile")}>
+                  <Settings size={18} />
+                  정보 수정
+                </button>
+              </nav>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="bg-white rounded-xl p-4 border-4 border-line">
+                  <h3 className="font-bold mb-2 flex items-center gap-1 text-sm">
+                    <CheckCircle className="text-green-500" size={16} />
+                    완료된 보고서
+                  </h3>
+                  <p className="text-2xl font-black">{reports.length}건</p>
+                </div>
+                <div className="bg-white rounded-xl p-4 border-4 border-line">
+                  <h3 className="font-bold mb-2 flex items-center gap-1 text-sm">
+                    <PlusCircle className="text-primary" size={16} />
+                    보고서 작성 전 캠페인
+                  </h3>
+                  {campaignsLoading ? (
+                    <p className="text-sm font-bold text-stone-400">캠페인을 불러오고 있습니다...</p>
+                  ) : (
+                    <p className="text-2xl font-black">{pendingReportCampaigns.length}건</p>
+                  )}
+                </div>
+              </div>
+
+              <div className="p-6">
+                <h3 className="font-bold text-secondary mb-2 flex items-center gap-2">
+                  <AlertCircle size={16} />
+                  도움이 필요하신가요?
+                </h3>
+                <p className="text-xs text-stone-600 leading-relaxed">
+                  보고서 작성이나 환전 방법이 궁금하시면 고객센터로 문의해 주세요.
+                </p>
+              </div>
             </div>
           </div>
-        </header>
+        </aside>
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-
-          <aside className="lg:col-span-4 space-y-4">
-            <nav className="bg-white rounded-xl p-4 shadow-sm border-4 border-line">
-              <button 
-                onClick={() => setActiveTab("dashboard")}
-                className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all ${activeTab === 'dashboard' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:bg-surface'}`}
-              >
-                <Wallet size={20} />
-                내 현황 및 지갑
-              </button>
-              <button 
-                onClick={() => setActiveTab("reports")}
-                className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all ${activeTab === 'reports' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:bg-surface'}`}
-              >
-                <FileText size={20} />
-                참여 캠페인 & 보고서
-              </button>
-              <button 
-                onClick={() => setActiveTab("profile")}
-                className={`w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold transition-all ${activeTab === 'profile' ? 'bg-primary text-white shadow-lg shadow-primary/20' : 'text-stone-500 hover:bg-surface'}`}
-              >
-                <Settings size={20} />
-                정보 수정
-              </button>
-            </nav>
-
-            <div className="grid grid-cols-2 gap-3">
-              <div className="bg-white rounded-xl p-4 border-4 border-line">
-                <h3 className="font-bold mb-2 flex items-center gap-1 text-sm">
-                  <CheckCircle className="text-green-500" size={16} />
-                  완료된 보고서
-                </h3>
-                <div className="text-2xl font-black">{reports.length}건</div>
-              </div>
-              <div className="bg-white rounded-xl p-4 border-4 border-line">
-                <h3 className="font-bold mb-2 flex items-center gap-1 text-sm">
-                  <PlusCircle className="text-primary" size={16} />
-                  진행 중인 캠페인
-                </h3>
-                <div className="text-2xl font-black">{campaigns.length}건</div>
-              </div>
-            </div>
-
-            <div className="p-6">
-              <h3 className="font-bold text-secondary mb-2 flex items-center gap-2">
-                <AlertCircle size={16} />
-                도움이 필요하신가요?
-              </h3>
-              <p className="text-xs text-stone-600 leading-relaxed">
-                보고서 작성이나 환전 방법이 궁금하시면 고객센터로 문의해 주세요.
-              </p>
-            </div>
-          </aside>
-
-          <main className="lg:col-span-8">
-            
+        <main className="mypage-layout-content">
+          <div className="mypage-sub-page">
+            <div className="mypage-sub-container">
+              <div className="mypage-sub-card mypage-sub-card--scroll pr-1">
             {activeTab === "dashboard" && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div className="bg-white rounded-2xl p-8 md:p-10 shadow-xl shadow-stone-200/50 border-4 border-line relative overflow-hidden">
+                <div className="bg-white rounded-2xl p-8 md:p-10 border-4 border-line relative overflow-hidden">
                   <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full -mr-32 -mt-32 blur-3xl" />
                   
                   <div className="relative z-10">
@@ -312,38 +359,38 @@ const BeneficiaryMainPage = () => {
                       <Wallet className="text-primary" size={28} />
                     </div>
                     
-                    <h2 className="text-stone-500 font-bold mb-1">보유 토큰 잔액</h2>
+                    <h2 className="text-stone-500 text-xl font-bold mb-1">보유 토큰 잔액</h2>
                     <div className="flex items-baseline gap-2 mb-8">
-                      <span className="text-5xl font-display font-black text-ink">{userInfo?.balance || "0.00"}</span>
+                      <span className="text-5xl font-display font-black text-ink">{formatTokenAmount(userInfo?.balance)}</span>
                       <span className="text-xl font-bold text-primary">GNT</span>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
                       <div className="bg-surface rounded-2xl p-5 border-2 border-line">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-bold text-stone-400">내 블록체인 지갑 주소</span>
+                          <span className="text-sm font-bold text-stone-400">내 블록체인 지갑 주소</span>
                           <button onClick={() => copyToClipboard(userInfo?.walletAddress)} className="text-stone-400 hover:text-primary transition-colors">
-                            <Clipboard size={14} />
+                            <Clipboard size={18} />
                           </button>
                         </div>
-                        <code className="text-[10px] font-mono break-all text-stone-600 block">
+                        <code className="text-[12px] font-mono break-all text-stone-600 block">
                           {userInfo?.walletAddress || "지갑 정보를 불러올 수 없습니다."}
                         </code>
                         <div className="mt-2 flex items-center gap-2">
-                          <span className="text-[10px] text-stone-400 font-bold">ID:</span>
-                          <span className="text-[10px] text-primary font-black">{userInfo?.walletNo || "N/A"}</span>
+                          <span className="text-[12px] text-stone-400 font-bold">ID :</span>
+                          <span className="text-[12px] text-primary font-black">{userInfo?.walletNo || "N/A"}</span>
                         </div>
                       </div>
                       
                       <div className="bg-stone-50 rounded-2xl p-5 border-2 border-line border-dashed">
                         <div className="flex items-center justify-between mb-2">
-                          <span className="text-xs font-bold text-stone-400">등록된 환전 계좌</span>
+                          <span className="text-sm font-bold text-stone-400">등록된 환전 계좌</span>
                           <button onClick={() => copyToClipboard(userInfo?.account)} className="text-stone-400 hover:text-primary transition-colors">
-                            <Clipboard size={14} />
+                            <Clipboard size={18} />
                           </button>
                         </div>
                         <p className="text-sm font-bold text-ink">{userInfo?.account || "계좌 정보를 등록해주세요."}</p>
-                        <p className="text-[10px] text-stone-400 mt-1">* 환전 신청 시 이 계좌로 현금이 입금됩니다.</p>
+                        <p className="text-[12px] text-stone-400 mt-1">* 환전 신청 시 이 계좌로 현금이 입금됩니다.</p>
                       </div>
                     </div>
 
@@ -362,14 +409,77 @@ const BeneficiaryMainPage = () => {
               </div>
             )}
 
+            {activeTab === "campaigns" && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <section>
+                  <h2 className="text-2xl font-display font-bold mb-6">내가 참여한 캠페인</h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {(campaigns || []).length > 0 ? campaigns.map((campaign, index) => {
+                      const campaignNo = Number(campaign?.campaignNo ?? campaign?.campaign_no);
+                      const canWriteReport = !reportedCampaignNos.has(campaignNo);
+                      return (
+                      <div key={campaignNo || `campaign-${index}`} className="bg-white p-6 rounded-3xl border-4 border-line hover:border-primary/30 transition-all group">
+                        <div className="flex items-center justify-between mb-3">
+                          <span className="text-[11px] font-black text-stone-400">캠페인 NO. {campaignNo || "-"}</span>
+                          <span className="text-[11px] font-black px-3 py-1 rounded-full bg-stone-100 text-stone-600">
+                            {getCampaignStatusLabel(campaign?.campaignStatus)}
+                          </span>
+                        </div>
+                        <h4 className="font-bold text-lg mb-2">
+                          <button
+                            type="button"
+                            onClick={() => campaignNo && navigate(`/campaign/${campaignNo}`)}
+                            className="text-left group-hover:text-primary transition-colors hover:text-primary"
+                          >
+                            {campaign.title}
+                          </button>
+                        </h4>
+                        <p className="text-xs text-stone-400 mb-4">
+                          종료일: {formatCampaignDate(campaign?.endAt ?? campaign?.endDate)}
+                        </p>
+                        <button 
+                          onClick={() => canWriteReport && handleCreateReport(campaign)}
+                          className={`w-full mt-4 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-all ${
+                            canWriteReport
+                              ? "bg-surface text-stone-600 hover:bg-primary hover:text-white"
+                              : "bg-green-50 text-green-700 cursor-default"
+                          }`}
+                        >
+                          <PlusCircle size={16} />
+                          {canWriteReport ? "보고서 작성하기" : "보고서 작성 완료"}
+                        </button>
+                      </div>
+                    )}) : (
+                      <div className="col-span-full bg-white py-12 rounded-xl border-4 border-dashed border-line text-center">
+                        <p className="text-stone-400 font-medium">
+                          {campaignsLoading ? "캠페인을 불러오고 있습니다..." : "참여 중인 캠페인이 없습니다."}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </section>
+              </div>
+            )}
+
             {activeTab === "reports" && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
                 <section>
-                  <h2 className="text-2xl font-display font-bold mb-6">참여 중인 캠페인</h2>
+                  <h2 className="text-2xl font-display font-bold mb-6">작성 전 보고서</h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {campaigns.length > 0 ? campaigns.map(campaign => (
+                    {pendingReportCampaigns.length > 0 ? pendingReportCampaigns.map(campaign => (
                       <div key={campaign.campaignNo} className="bg-white p-6 rounded-3xl border-4 border-line hover:border-primary/30 transition-all group">
-                        <h4 className="font-bold text-lg mb-2 group-hover:text-primary transition-colors">{campaign.title}</h4>
+                        <h4 className="font-bold text-lg mb-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const campaignId = campaign?.campaignNo ?? campaign?.campaign_no;
+                              if (campaignId) navigate(`/campaign/${campaignId}`);
+                            }}
+                            className="text-left group-hover:text-primary transition-colors hover:text-primary"
+                          >
+                            {campaign.title}
+                          </button>
+                        </h4>
                         <button 
                           onClick={() => handleCreateReport(campaign)}
                           className="w-full mt-4 bg-surface py-3 rounded-xl font-bold text-sm text-stone-600 flex items-center justify-center gap-2 hover:bg-primary hover:text-white transition-all"
@@ -380,14 +490,16 @@ const BeneficiaryMainPage = () => {
                       </div>
                     )) : (
                       <div className="col-span-full bg-white py-12 rounded-xl border-4 border-dashed border-line text-center">
-                        <p className="text-stone-400 font-medium">참여 중인 캠페인이 없습니다.</p>
+                        <p className="text-stone-400 font-medium">
+                          {campaignsLoading ? "캠페인을 불러오고 있습니다..." : "작성 전 보고서가 없습니다."}
+                        </p>
                       </div>
                     )}
                   </div>
                 </section>
 
                 <section>
-                  <h2 className="text-2xl font-display font-bold mb-6">내가 작성한 보고서</h2>
+                  <h2 className="text-2xl font-display font-bold mb-6">작성된 보고서</h2>
                   <div className="space-y-4">
                     {reports.length > 0 ? reports.map(report => (
                       <div 
@@ -422,8 +534,8 @@ const BeneficiaryMainPage = () => {
             )}
 
             {activeTab === "profile" && (
-              <div className="bg-white rounded-2xl p-8 md:p-10 shadow-xl shadow-stone-200/50 border-4 border-line animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <h2 className="text-2xl font-display font-bold mb-8">내 정보 수정</h2>
+              <div className="bg-white rounded-2xl p-8 md:p-10 border-4 border-line animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <h2 className="text-3xl font-display font-bold mb-8">내 정보 수정</h2>
                 <form 
                   onSubmit={async (e) => {
                     e.preventDefault();
@@ -495,7 +607,7 @@ const BeneficiaryMainPage = () => {
                     <input 
                       name="account"
                       type="text" 
-                      placeholder="예: 신한은행 110-123-456789"
+                      placeholder="예: 110-123-456789"
                       defaultValue={userInfo?.account}
                       className="w-full px-6 py-4 rounded-2xl border-2 border-line focus:border-primary focus:ring-0 transition-all"
                     />
@@ -509,8 +621,10 @@ const BeneficiaryMainPage = () => {
               </div>
             )}
 
-          </main>
-        </div>
+              </div>
+            </div>
+          </div>
+        </main>
       </div>
 
       {/* 환전 신청 모달 */}
@@ -531,7 +645,7 @@ const BeneficiaryMainPage = () => {
               <div className="bg-surface p-6 rounded-2xl border-2 border-line mb-6">
                 <div className="flex justify-between items-center mb-2">
                   <span className="text-xs font-bold text-stone-400">최대 가능 금액</span>
-                  <span className="text-sm font-black text-primary">{userInfo?.balance || "0.00"} GNT</span>
+                  <span className="text-sm font-black text-primary">{formatTokenAmount(userInfo?.balance)} GNT</span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-xs font-bold text-stone-400">입금 예정 계좌</span>

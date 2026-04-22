@@ -1,15 +1,24 @@
-import { useState } from "react";
+﻿import { useState } from "react";
 import ModalLayout from "./ModalLayout";
 import {
   requestPasswordReset,
   verifyEmailCode,
   confirmPasswordReset,
 } from "../api/authApi";
-import { Mail, User, ShieldCheck, Lock, ArrowRight, RefreshCw, CheckCircle2, AlertCircle } from "lucide-react";
+import {
+  Mail,
+  User,
+  ShieldCheck,
+  Lock,
+  ArrowRight,
+  RefreshCw,
+  CheckCircle2,
+  AlertCircle,
+} from "lucide-react";
+import "../styles/login.css";
 
 export default function PasswordResetModal({ role, onClose }) {
   const [step, setStep] = useState(1);
-
   const [form, setForm] = useState({
     email: "",
     name: "",
@@ -17,51 +26,45 @@ export default function PasswordResetModal({ role, onClose }) {
     newPassword: "",
     newPassword2: "",
   });
-
   const [message, setMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [resetting, setResetting] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
 
-  const extractErrorMessage = async (response, defaultMsg) => {
+  const extractErrorMessage = async (response, fallback) => {
     try {
       const contentType = response.headers.get("content-type");
       if (contentType && contentType.includes("application/json")) {
         const data = await response.json();
-        return data.message || defaultMsg;
-      } else {
-        const text = await response.text();
-        return text || defaultMsg;
+        return data.message || fallback;
       }
-    } catch (e) {
-      return defaultMsg;
+      const text = await response.text();
+      return text || fallback;
+    } catch {
+      return fallback;
     }
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSendCode = async () => {
-    const nameLabel = role === "foundation" ? "단체명" : "성함";
+    const nameLabel = role === "foundation" ? "단체명" : "이름";
     if (!form.email.trim()) {
-      alert("이메일을 입력해 주세요.");
+      window.alert("이메일을 입력해 주세요.");
       return;
     }
     if (!form.name.trim()) {
-      alert(`${nameLabel}을 입력해 주세요.`);
+      window.alert(`${nameLabel}을 입력해 주세요.`);
       return;
     }
 
     try {
       setSending(true);
       setMessage("");
-
       const response = await requestPasswordReset(role, {
         email: form.email,
         name: form.name,
@@ -69,17 +72,16 @@ export default function PasswordResetModal({ role, onClose }) {
 
       if (!response.ok) {
         const errorMsg = await extractErrorMessage(
-            response,
-            "입력하신 정보와 일치하는 계정을 찾을 수 없습니다. (소셜 로그인 계정은 비밀번호 재설정이 불가능합니다)"
+          response,
+          "입력한 정보와 일치하는 계정을 찾을 수 없습니다."
         );
         throw new Error(errorMsg);
       }
 
       setStep(2);
-      setMessage("인증번호가 발송되었습니다.");
+      setMessage("인증코드를 이메일로 보냈습니다.");
     } catch (error) {
-      console.error(error);
-      setMessage(error.message);
+      setMessage(error.message || "인증코드 발송에 실패했습니다.");
     } finally {
       setSending(false);
     }
@@ -87,31 +89,32 @@ export default function PasswordResetModal({ role, onClose }) {
 
   const handleVerifyCode = async () => {
     if (!form.code.trim()) {
-      alert("인증번호를 입력해 주세요.");
+      window.alert("인증코드를 입력해 주세요.");
       return;
     }
 
     try {
       setVerifying(true);
       setMessage("");
-
       const response = await verifyEmailCode(role, {
         email: form.email,
         code: form.code,
       });
 
       if (!response.ok) {
-        const errorMsg = await extractErrorMessage(response, "인증번호가 일치하지 않거나 만료되었습니다.");
+        const errorMsg = await extractErrorMessage(
+          response,
+          "인증코드가 올바르지 않거나 만료되었습니다."
+        );
         throw new Error(errorMsg);
       }
 
       setIsVerified(true);
       setStep(3);
-      setMessage("이메일 인증이 완료되었습니다. 새 비밀번호를 설정해주세요.");
+      setMessage("인증이 완료되었습니다. 새 비밀번호를 입력해 주세요.");
     } catch (error) {
-      console.error(error);
       setIsVerified(false);
-      setMessage(error.message);
+      setMessage(error.message || "인증 확인에 실패했습니다.");
     } finally {
       setVerifying(false);
     }
@@ -119,25 +122,28 @@ export default function PasswordResetModal({ role, onClose }) {
 
   const handleResetPassword = async () => {
     if (!form.newPassword.trim()) {
-      alert("새 비밀번호를 입력해 주세요.");
+      window.alert("새 비밀번호를 입력해 주세요.");
       return;
     }
 
-    const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,20}$/;
+    const passwordRegex =
+      /^(?=.*[A-Za-z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]).{8,20}$/;
+
     if (!passwordRegex.test(form.newPassword)) {
-      alert("비밀번호는 영문, 숫자, 특수문자를 각각 1개 이상 포함해야 하며, 8~20자 이내여야 합니다.");
+      window.alert(
+        "비밀번호는 영문, 숫자, 특수문자를 각각 1개 이상 포함하고 8~20자여야 합니다."
+      );
       return;
     }
 
     if (form.newPassword !== form.newPassword2) {
-      alert("비밀번호 확인이 일치하지 않습니다.");
+      window.alert("비밀번호 확인이 일치하지 않습니다.");
       return;
     }
 
     try {
       setResetting(true);
       setMessage("");
-
       const response = await confirmPasswordReset(role, {
         email: form.email,
         newPassword: form.newPassword,
@@ -146,205 +152,225 @@ export default function PasswordResetModal({ role, onClose }) {
       });
 
       if (!response.ok) {
-        const errorMsg = await extractErrorMessage(response, "비밀번호 재설정에 실패했습니다.");
+        const errorMsg = await extractErrorMessage(
+          response,
+          "비밀번호 변경에 실패했습니다."
+        );
         throw new Error(errorMsg);
       }
 
-      alert("비밀번호가 성공적으로 재설정되었습니다.");
+      window.alert("비밀번호가 성공적으로 변경되었습니다.");
       onClose();
     } catch (error) {
-      console.error(error);
-      setMessage(error.message);
+      setMessage(error.message || "비밀번호 변경 중 오류가 발생했습니다.");
     } finally {
       setResetting(false);
     }
   };
 
   return (
-    <ModalLayout title="비밀번호 재설정" onClose={onClose}>
-      <div className="p-8">
-        {/* Step Indicator */}
-        <div className="flex items-center justify-between mb-10 relative px-4">
-          <div className="absolute left-0 right-0 top-1/2 -translate-y-1/2 h-0.5 bg-slate-100 z-0 mx-12" />
+    <ModalLayout title="비밀번호 찾기" onClose={onClose}>
+      <div className="password-reset-modal">
+        <div className="password-reset-modal__steps">
           {[1, 2, 3].map((s) => (
-            <div key={s} className="relative z-10 flex flex-col items-center gap-2">
-              <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold transition-all ${
-                step >= s ? 'bg-primary text-white shadow-lg shadow-orange-100' : 'bg-slate-100 text-slate-400'
-              }`}>
-                {step > s ? <CheckCircle2 size={20} /> : s}
+            <div key={s} className="password-reset-modal__step">
+              <div
+                className={`password-reset-modal__step-dot ${
+                  step >= s ? "is-active" : ""
+                }`}
+              >
+                {step > s ? <CheckCircle2 size={16} /> : s}
               </div>
-              <span className={`text-[10px] font-bold uppercase tracking-widest ${
-                step >= s ? 'text-primary' : 'text-slate-300'
-              }`}>
-                {s === 1 ? '정보입력' : s === 2 ? '인증확인' : '변경완료'}
+              <span
+                className={`password-reset-modal__step-label ${
+                  step >= s ? "is-active" : ""
+                }`}
+              >
+                {s === 1 ? "정보 입력" : s === 2 ? "인증 확인" : "비밀번호 변경"}
               </span>
             </div>
           ))}
         </div>
 
-        <div className="space-y-6">
-          {step === 1 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex gap-3 items-start">
-                <AlertCircle className="text-primary mt-1 shrink-0" size={18} />
-                <p className="text-sm text-slate-500 leading-relaxed">
-                  비밀번호를 재설정할 계정의 이메일과<br />
-                  가입 시 등록한 {role === "foundation" ? "단체명" : "이름"}을 입력해주세요.
+        {step === 1 && (
+          <div className="password-reset-modal__section">
+            <div className="password-reset-modal__hint">
+                <AlertCircle size={18} />
+                <p>
+                  비밀번호를 재설정할 계정의 이메일과
+                  <br />
+                  {role === "foundation" ? "단체명" : "이름"}을 입력해 주세요.
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">이메일</label>
-                  <div className="relative group">
-                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" size={20} />
-                    <input
-                      type="email"
-                      name="email"
-                      value={form.email}
-                      onChange={handleChange}
-                      placeholder="example@email.com"
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary focus:bg-white focus:outline-none transition-all text-slate-700 font-medium"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">
-                    {role === "foundation" ? "단체명" : "이름"}
-                  </label>
-                  <div className="relative group">
-                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" size={20} />
-                    <input
-                      type="text"
-                      name="name"
-                      value={form.name}
-                      onChange={handleChange}
-                      placeholder={role === "foundation" ? "단체명 입력" : "성함 입력"}
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary focus:bg-white focus:outline-none transition-all text-slate-700 font-medium"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleSendCode}
-                disabled={sending}
-                className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-orange-100 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 group"
-              >
-                {sending ? <RefreshCw className="animate-spin" size={20} /> : (
-                  <>
-                    인증번호 발송
-                    <ArrowRight size={20} className="group-hover:translate-x-1 transition-transform" />
-                  </>
-                )}
-              </button>
+            <label className="password-reset-modal__label" htmlFor="prm-email">
+              이메일
+            </label>
+            <div className="password-reset-modal__input-wrap">
+              <Mail size={18} className="password-reset-modal__icon" />
+              <input
+                id="prm-email"
+                type="email"
+                name="email"
+                value={form.email}
+                onChange={handleChange}
+                className="password-reset-modal__input"
+                placeholder="example@email.com"
+              />
             </div>
-          )}
 
-          {step === 2 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-               <div className="bg-emerald-50 p-4 rounded-2xl border border-emerald-100 flex gap-3 items-start">
-                <ShieldCheck className="text-emerald-500 mt-1 shrink-0" size={18} />
-                <p className="text-sm text-emerald-700 leading-relaxed font-medium">
-                  {form.email} 주소로 인증번호를 보냈습니다.<br />
-                  메일함에서 인증번호를 확인 후 입력해 주세요.
+            <label className="password-reset-modal__label" htmlFor="prm-name">
+              {role === "foundation" ? "단체명" : "이름"}
+            </label>
+            <div className="password-reset-modal__input-wrap">
+              <User size={18} className="password-reset-modal__icon" />
+              <input
+                id="prm-name"
+                type="text"
+                name="name"
+                value={form.name}
+                onChange={handleChange}
+                className="password-reset-modal__input"
+                placeholder={
+                  role === "foundation"
+                    ? "단체명을 입력해 주세요"
+                    : "이름을 입력해 주세요"
+                }
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleSendCode}
+              disabled={sending}
+              className="password-reset-modal__submit"
+            >
+              {sending ? (
+                <RefreshCw className="animate-spin" size={18} />
+              ) : (
+                <>
+                  인증코드 발송
+                  <ArrowRight size={18} />
+                </>
+              )}
+            </button>
+          </div>
+        )}
+
+        {step === 2 && (
+          <div className="password-reset-modal__section">
+            <div className="password-reset-modal__hint password-reset-modal__hint--ok">
+                <ShieldCheck size={18} />
+                <p>
+                  인증코드를 보냈습니다.
+                  <br />
+                  {form.email}
                 </p>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">인증번호</label>
-                <input
-                  type="text"
-                  name="code"
-                  value={form.code}
-                  onChange={handleChange}
-                  placeholder="인증번호 6자리 입력"
-                  className="w-full px-6 py-4 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary focus:bg-white focus:outline-none transition-all text-center text-xl font-black tracking-[0.5em] text-slate-700"
-                />
-              </div>
+            <label className="password-reset-modal__label" htmlFor="prm-code">
+              인증코드
+            </label>
+            <input
+              id="prm-code"
+              type="text"
+              name="code"
+              value={form.code}
+              onChange={handleChange}
+              className="password-reset-modal__input password-reset-modal__input--center"
+              placeholder="6자리 입력"
+            />
 
-              <button
-                type="button"
-                onClick={handleVerifyCode}
-                disabled={verifying}
-                className="w-full bg-slate-800 text-white font-bold py-4 rounded-2xl shadow-lg shadow-slate-200 hover:bg-slate-900 transition-all flex items-center justify-center gap-2"
-              >
-                {verifying ? <RefreshCw className="animate-spin" size={20} /> : "인증번호 확인"}
-              </button>
+            <button
+              type="button"
+              onClick={handleVerifyCode}
+              disabled={verifying}
+              className="password-reset-modal__submit password-reset-modal__submit--dark"
+            >
+              {verifying ? (
+                <RefreshCw className="animate-spin" size={18} />
+              ) : (
+                "인증 확인"
+              )}
+            </button>
 
-              <button
-                type="button"
-                onClick={handleSendCode}
-                className="w-full text-slate-400 text-sm font-medium hover:text-slate-600 transition-colors"
-              >
-                인증번호를 받지 못하셨나요? <span className="underline">다시 보내기</span>
-              </button>
-            </div>
-          )}
+            <button
+              type="button"
+              onClick={handleSendCode}
+              className="password-reset-modal__text-btn"
+            >
+              인증코드를 다시 받으시겠어요?
+            </button>
+          </div>
+        )}
 
-          {step === 3 && (
-            <div className="space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-300">
-               <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 flex gap-3 items-start">
-                <Lock className="text-primary mt-1 shrink-0" size={18} />
-                <p className="text-sm text-slate-500 leading-relaxed">
-                  보안을 위해 영문, 숫자, 특수문자를 포함하여<br />
-                  8~20자 이내의 강력한 비밀번호를 설정해 주세요.
+        {step === 3 && (
+          <div className="password-reset-modal__section">
+            <div className="password-reset-modal__hint">
+                <Lock size={18} />
+                <p>
+                  영문/숫자/특수문자를 포함해 8~20자로
+                  <br />
+                  새 비밀번호를 입력해 주세요.
                 </p>
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">새 비밀번호</label>
-                  <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" size={20} />
-                    <input
-                      type="password"
-                      name="newPassword"
-                      value={form.newPassword}
-                      onChange={handleChange}
-                      placeholder="영문+숫자+특수문자 8~20자"
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary focus:bg-white focus:outline-none transition-all text-slate-700 font-medium"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-1.5 ml-1">비밀번호 확인</label>
-                  <div className="relative group">
-                    <ShieldCheck className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-primary transition-colors" size={20} />
-                    <input
-                      type="password"
-                      name="newPassword2"
-                      value={form.newPassword2}
-                      onChange={handleChange}
-                      placeholder="비밀번호 다시 입력"
-                      className="w-full pl-12 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-2xl focus:border-primary focus:bg-white focus:outline-none transition-all text-slate-700 font-medium"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleResetPassword}
-                disabled={resetting}
-                className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-orange-100 hover:bg-primary/90 transition-all flex items-center justify-center gap-2"
-              >
-                {resetting ? <RefreshCw className="animate-spin" size={20} /> : "비밀번호 저장 및 변경"}
-              </button>
+            <label className="password-reset-modal__label" htmlFor="prm-new-password">
+              새 비밀번호
+            </label>
+            <div className="password-reset-modal__input-wrap">
+              <Lock size={18} className="password-reset-modal__icon" />
+              <input
+                id="prm-new-password"
+                type="password"
+                name="newPassword"
+                value={form.newPassword}
+                onChange={handleChange}
+                className="password-reset-modal__input"
+                placeholder="영문+숫자+특수문자 8~20자"
+              />
             </div>
-          )}
 
-          {message && (
-            <p className={`text-center text-sm font-medium py-3 rounded-xl border ${
-              step === 2 ? 'bg-emerald-50 text-emerald-600 border-emerald-100' : 'bg-rose-50 text-rose-500 border-rose-100'
-            }`}>
-              {message}
-            </p>
-          )}
-        </div>
+            <label className="password-reset-modal__label" htmlFor="prm-new-password2">
+              비밀번호 확인
+            </label>
+            <div className="password-reset-modal__input-wrap">
+              <ShieldCheck size={18} className="password-reset-modal__icon" />
+              <input
+                id="prm-new-password2"
+                type="password"
+                name="newPassword2"
+                value={form.newPassword2}
+                onChange={handleChange}
+                className="password-reset-modal__input"
+                placeholder="비밀번호를 다시 입력해 주세요"
+              />
+            </div>
+
+            <button
+              type="button"
+              onClick={handleResetPassword}
+              disabled={resetting}
+              className="password-reset-modal__submit"
+            >
+              {resetting ? (
+                <RefreshCw className="animate-spin" size={18} />
+              ) : (
+                "비밀번호 변경"
+              )}
+            </button>
+          </div>
+        )}
+
+        {message && (
+          <p
+            className={`password-reset-modal__message ${
+              step === 2 ? "is-ok" : "is-error"
+            }`}
+          >
+            {message}
+          </p>
+        )}
       </div>
     </ModalLayout>
   );

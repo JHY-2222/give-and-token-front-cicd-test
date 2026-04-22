@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+﻿import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { AnimatePresence } from "motion/react";
 import LoginRoleSelector from "../components/LoginRoleSelector";
@@ -8,6 +8,7 @@ import SocialLoginSection from "../components/SocialLoginSection";
 import EmailFindModal from "../components/EmailFindModal";
 import PasswordResetModal from "../components/PasswordResetModal";
 import { loginLocal } from "../api/authApi";
+import loginImage from "../../../img/login.png";
 
 const LoginPage = () => {
   const navigate = useNavigate();
@@ -54,11 +55,11 @@ const LoginPage = () => {
         if (contentType && contentType.includes("application/json")) {
           const data = await response.json();
           return data.message || "로그인에 실패했습니다.";
-        } else {
-          const text = await response.text();
-          return text || "로그인에 실패했습니다.";
         }
-      } catch (e) {
+
+        const text = await response.text();
+        return text || "로그인에 실패했습니다.";
+      } catch (err) {
         return "로그인에 실패했습니다.";
       }
     };
@@ -77,11 +78,9 @@ const LoginPage = () => {
       }
 
       const data = await response.json().catch(() => null);
-      console.log("로그인 성공:", data);
-
       const rawToken = String(data?.accessToken || "")
-          .replace(/^Bearer\s+/i, "")
-          .trim();
+        .replace(/^Bearer\s+/i, "")
+        .trim();
 
       if (rawToken) {
         window.localStorage.setItem("accessToken", rawToken);
@@ -92,13 +91,13 @@ const LoginPage = () => {
       if (loginData.role === "foundation") {
         window.localStorage.setItem("foundationAccessToken", rawToken);
         window.localStorage.setItem(
-            "foundationAuthInfo",
-            JSON.stringify({
-              foundationNo: data?.foundationNo ?? null,
-              foundationName: data?.foundationName ?? "",
-              email: data?.email ?? loginData.email,
-              tokenType: data?.tokenType ?? "Bearer",
-            }),
+          "foundationAuthInfo",
+          JSON.stringify({
+            foundationNo: data?.foundationNo ?? null,
+            foundationName: data?.foundationName ?? "",
+            email: data?.email ?? loginData.email,
+            tokenType: data?.tokenType ?? "Bearer",
+          }),
         );
       }
 
@@ -123,43 +122,49 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-surface flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-md w-full min-h-[620px] space-y-6 p-10 bg-white rounded-2xl shadow-lg text-ink">
-        <h1 className="text-center text-3xl font-display font-bold tracking-tight text-ink">
-          로그인
-        </h1>
+    <div className="min-h-screen bg-[#FFFDFB] font-sans">
+      <div className="login-page-card w-full max-w-5xl mx-auto min-h-screen p-6 md:p-10 text-ink">
+        <div className="login-page-layout grid grid-cols-1 lg:grid-cols-[1.1fr_1fr] gap-8 lg:gap-10 items-center">
+          <div className="login-content-panel">
+            <h1 className="login-title">
+              SIGN IN
+            </h1>
 
-        <LoginRoleSelector role={loginData.role} onChange={handleChange} />
+            <div className="login-tab-shell">
+              <LoginRoleSelector role={loginData.role} onChange={handleChange} />
+              <div className="login-tab-panel">
+                <LoginForm
+                  loginData={loginData}
+                  onChange={handleChange}
+                  onSubmit={handleLocalLogin}
+                  errorMessage={loginError}
+                />
+                <div className="login-links-slot">
+                  {loginData.role === "user" ? (
+                    <LoginLinks
+                      onOpenFindEmail={() => setIsEmailFindOpen(true)}
+                      onOpenPasswordReset={() => setIsPasswordResetOpen(true)}
+                    />
+                  ) : null}
+                </div>
 
-        <LoginForm
-          loginData={loginData}
-          onChange={handleChange}
-          onSubmit={handleLocalLogin}
-          errorMessage={loginError}
-        />
-
-        {loginData.role === "user" && (
-          <LoginLinks
-            onOpenFindEmail={() => setIsEmailFindOpen(true)}
-            onOpenPasswordReset={() => setIsPasswordResetOpen(true)}
-          />
-        )}
-
-        <>
-          <div className="relative flex py-3 items-center">
-            <div className="flex-grow border-t border-gray-300"></div>
-            <span className="flex-shrink mx-4 text-gray-400 text-xs">
-              또는
-            </span>
-            <div className="flex-grow border-t border-gray-300"></div>
+                <SocialLoginSection
+                  role={loginData.role}
+                  onGoToSignUp={goToSignUp}
+                  onGoogleLogin={handleGoogleLogin}
+                />
+              </div>
+            </div>
           </div>
 
-          <SocialLoginSection
-            role={loginData.role}
-            onGoToSignUp={goToSignUp}
-            onGoogleLogin={handleGoogleLogin}
-          />
-        </>
+          <div className="login-visual-panel flex items-end justify-center lg:justify-end lg:pb-8 lg:pr-6">
+            <img
+              src={loginImage}
+              alt="로그인"
+              className="h-64 md:h-[18rem] lg:h-[25rem] w-auto max-w-none object-contain origin-bottom scale-100 lg:translate-x-6"
+            />
+          </div>
+        </div>
 
         <AnimatePresence>
           {isEmailFindOpen && (

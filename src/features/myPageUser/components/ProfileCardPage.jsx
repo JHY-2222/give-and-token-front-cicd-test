@@ -17,17 +17,11 @@ export default function ProfileCard({
   const isDonationHistory = pathname === "/mypage/donation-history";
 
   const getMenuButtonClass = (isActive) =>
-    `w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-[15px] uppercase tracking-widest transition-colors group ${
-      isActive ? "bg-white/20 text-white" : "text-white/90 hover:bg-white/15"
+    `w-full flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-[15px] transition-all ${
+      isActive
+        ? "bg-primary text-white shadow-lg shadow-primary/20"
+        : "text-stone-500 hover:bg-surface"
     }`;
-
-  const getMenuIconWrapClass = (isActive) =>
-    `w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${
-      isActive ? "bg-white/25" : "bg-white/10 group-hover:bg-white/20"
-    }`;
-
-  const getMenuIconClass = (isActive) =>
-    `transition-colors ${isActive ? "text-white" : "text-white/60 group-hover:text-white"}`;
 
   
   const getProfileImage = () => {
@@ -50,65 +44,58 @@ export default function ProfileCard({
   };
 
   return (
-    <section className="mypage-card flex flex-col items-center w-full h-full bg-gradient-to-br from-[#FFB08B] to-primary border-none shadow-[0_10px_40px_-15px_rgba(78,52,46,0.08)]">
-      <button className="btn-logout !text-white/60 hover:!text-white" onClick={handleLogout}>
-        <LogOut size={14} />
-        <span className="font-black tracking-widest text-[12px]">LOGOUT</span>
-      </button>
+    <section className="mypage-card relative w-full h-full bg-white border-4 border-line shadow-sm flex flex-col items-center">
+        <button className="btn-logout !text-stone-400 hover:!text-primary" onClick={handleLogout}>
+          <LogOut size={14} />
+          <span className="font-black tracking-widest text-[12px]">LOGOUT</span>
+        </button>
 
-      <div className="mt-8 flex flex-col items-center w-full">
+      <div className="mt-8 flex flex-col items-center w-full px-6">
         <div className="mb-6 relative">
-          <div className="absolute inset-0 bg-white/20 rounded-full blur-xl scale-110" />
           {myInfo?.profilePath ? (
             <img
               src={getProfileImage()}
               alt="Profile"
-              className="relative w-40 h-40 rounded-full border-4 border-white/50 object-cover "
+              className="relative w-40 h-40 rounded-full border-4 border-line object-cover"
             />
           ) : (
-            <div className="relative w-40 h-40 rounded-full bg-white/20 flex items-center justify-center border-4 border-white/30 backdrop-blur-md">
-              <User size={48} className="text-white/50" />
+            <div className="relative w-40 h-40 rounded-full bg-surface flex items-center justify-center border-4 border-line">
+              <User size={48} className="text-stone-400" />
             </div>
           )}
         </div>
 
         <div className="text-center mb-12 w-full px-4 relative">
-          <h2 className="text-3xl font-black text-white mb-2 tracking-tight">
+          <h2 className="text-3xl font-black text-ink mb-2 tracking-tight">
             {myInfo?.name ?? "사용자"} 님
           </h2>
-          <div className="flex items-center justify-center gap-1.5 text-white/70 text-sm font-bold bg-white/10 py-1.5 px-4 rounded-full w-fit mx-auto border border-white/5 backdrop-blur-sm">
-            <Mail size={12} className="opacity-50" />
-            <span className="break-all">{myInfo?.email ?? "No email"}</span>
+          <div className="inline-flex items-center justify-center gap-1.5 text-stone-500 text-sm font-bold bg-surface py-1.5 px-4 rounded-full w-fit mx-auto border border-line">
+            <Mail size={12} className="opacity-60" />
+            <span className="whitespace-nowrap">
+              {myInfo?.email ?? "No email"}
+            </span>
           </div>
         </div>
       </div>
 
-      <div className="flex flex-col gap-2 w-full pt-4 border-t border-white/10">
+      <div className="w-full mt-2 pt-4 border-t border-line px-6 flex flex-col gap-2">
         <button className={getMenuButtonClass(isHome)} onClick={onGoHome}>
-          <div className={getMenuIconWrapClass(isHome)}>
-            <House size={18} className={getMenuIconClass(isHome)} />
-          </div>
+          <House size={18} />
           홈
         </button>
 
         <button className={getMenuButtonClass(isProfileEdit)} onClick={onEditProfile}>
-          <div className={getMenuIconWrapClass(isProfileEdit)}>
-            <Settings size={18} className={getMenuIconClass(isProfileEdit)} />
-          </div>
+          <Settings size={18} />
           정보 수정
         </button>
 
         <button className={getMenuButtonClass(isPasswordChange)} onClick={onChangePassword}>
-          <div className={getMenuIconWrapClass(isPasswordChange)}>
-            <Lock size={18} className={getMenuIconClass(isPasswordChange)} />
-          </div>
+          <Lock size={18} />
           비밀번호 변경
         </button>
 
         <button className={getMenuButtonClass(isDonationHistory)} onClick={onViewDonations}>
-          <div className={getMenuIconWrapClass(isDonationHistory)}>
-            <Heart size={18} className={getMenuIconClass(isDonationHistory)} />
-          </div>
+          <Heart size={18} />
           후원 내역
         </button>
       </div>

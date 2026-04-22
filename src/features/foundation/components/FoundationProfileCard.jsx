@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 
 export default function FoundationProfileCard({ foundation }) {
-  if (!foundation) return <p className="text-sm text-stone-500">단체 정보 없음</p>;
+  if (!foundation) return <p className="text-sm text-stone-500">{"\uB2E8\uCCB4 \uC815\uBCF4 \uC5C6\uC74C"}</p>;
 
   return (
     <div className="space-y-4">
@@ -18,9 +18,7 @@ export default function FoundationProfileCard({ foundation }) {
             <div className="h-16 w-16 rounded-xl bg-stone-100" />
           )}
           <div>
-            <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">
-              기부단체명
-            </div>
+            <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">{"\uAE30\uBD80\uB2E8\uCCB4\uBA85"}</div>
             <div className="text-sm font-bold text-ink">{foundation.foundationName}</div>
           </div>
         </div>
@@ -30,16 +28,14 @@ export default function FoundationProfileCard({ foundation }) {
             to={`/foundation/${foundation.foundationNo}`}
             className="text-xs font-bold text-stone-400 transition-colors hover:text-primary"
           >
-            더보기
+            {"\uB354\uBCF4\uAE30"}
           </Link>
         )}
       </div>
 
       {foundation.description && (
         <div>
-          <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">
-            기부단체 소개
-          </div>
+          <div className="mb-1 text-[10px] font-bold uppercase tracking-widest text-stone-400">{"\uAE30\uBD80\uB2E8\uCCB4 \uC18C\uAC1C"}</div>
           <p className="text-sm leading-relaxed text-stone-700">{foundation.description}</p>
         </div>
       )}

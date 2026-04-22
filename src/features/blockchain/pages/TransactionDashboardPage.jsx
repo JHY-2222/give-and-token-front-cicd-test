@@ -1,26 +1,30 @@
 ﻿import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import Pagination from "../components/Pagination";
 import StatCard from "../components/StatCard";
 import TransactionTable from "../components/TransactionTable";
 import {
   getCachedTransactions,
   getDashboardOverview,
-  getTransactions,
-  resolveSearchTarget
+  getTransactions
 } from "../api/blockchainApi";
 
 function BlockIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
       <path
-        d="M12 3 19 7v10l-7 4-7-4V7l7-4Z"
+        d="M12 3 19.5 7.2v9.6L12 21l-7.5-4.2V7.2L12 3Z"
         fill="none"
         stroke="currentColor"
         strokeWidth="1.8"
         strokeLinejoin="round"
       />
-      <path d="M12 3v18M5 7l7 4 7-4" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path
+        d="M12 3v18M4.5 7.2 12 11.4l7.5-4.2"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
+        strokeLinejoin="round"
+      />
     </svg>
   );
 }
@@ -28,9 +32,9 @@ function BlockIcon() {
 function ClockIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="12" cy="13" r="7" fill="none" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M12 9v4l2.8 1.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <path d="M8 3h8M9 1v4M15 1v4" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 7.7v4.8l3.2 2" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M9.3 2.9h5.4" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
     </svg>
   );
 }
@@ -38,8 +42,10 @@ function ClockIcon() {
 function TransferIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <path d="M3 8h14m0 0-3-3m3 3-3 3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-      <path d="M21 16H7m0 0 3-3m-3 3 3 3" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M4 8h12.2m0 0-2.8-2.8M16.2 8l-2.8 2.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M20 16H7.8m0 0 2.8-2.8M7.8 16l2.8 2.8" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx="18.8" cy="8" r="1.2" fill="currentColor" />
+      <circle cx="5.2" cy="16" r="1.2" fill="currentColor" />
     </svg>
   );
 }
@@ -47,8 +53,8 @@ function TransferIcon() {
 function TokenIcon() {
   return (
     <svg viewBox="0 0 24 24" aria-hidden="true">
-      <circle cx="10" cy="12" r="5.5" fill="none" stroke="currentColor" strokeWidth="1.8" />
-      <circle cx="14" cy="12" r="5.5" fill="none" stroke="currentColor" strokeWidth="1.8" opacity="0.65" />
+      <circle cx="12" cy="12" r="8.2" fill="none" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M12 7.2v9.6M14.8 9.4c0-1.2-1.1-2.2-2.8-2.2-1.6 0-2.8.8-2.8 2.1 0 1.2.9 1.8 2.9 2.2 2 .4 2.8 1 2.8 2.2 0 1.3-1.2 2.1-2.9 2.1-1.7 0-3-.8-3-2.2" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }
@@ -113,8 +119,6 @@ function formatTokenAmount(value) {
 
 function TransactionDashboardPage() {
   const DASHBOARD_PAGE_SIZE = 10;
-  const navigate = useNavigate();
-  const [searchInput, setSearchInput] = useState("");
   const [page, setPage] = useState(1);
   const [data, setData] = useState({ items: [], pageInfo: null });
   const [overview, setOverview] = useState({
@@ -242,41 +246,17 @@ function TransactionDashboardPage() {
 
   return (
     <section>
-      <div className="dashboard-hero panel">
-        <form className="search-form" onSubmit={handleSearchSubmit}>
-          <span className="search-form__icon" aria-hidden="true">
-            o
-          </span>
-          <input
-            type="text"
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            placeholder="지갑 주소, 트랜잭션 해시, 재단명, 캠페인명 검색"
-          />
-          <button type="submit">SEARCH</button>
-        </form>
-
-        <div className="dashboard-hero__header">
-          <div>
-            <div className="dashboard-hero__title-row">
-              <h2>Give N Token</h2>
-              <span className="chain-status">RUNNING</span>
-            </div>
-            <p className="hero__text">
-              성공한 블록체인 트랜잭션을 조회하고, 해시와 지갑 기준으로 빠르게 흐름을 확인할 수 있습니다.
-            </p>
-          </div>
-          <p className="chain-id">Chain ID : {chainId}</p>
-        </div>
-
+      <div className="dashboard-hero">
         <div className="stats-grid stats-grid--hero">
           <StatCard
+            className="stat-card--wide"
             label="Latest Block"
             value={formatLocaleNumber(overview.latestBlock)}
             helper="가장 최근 블록 번호"
             icon={<BlockIcon />}
           />
           <StatCard
+            className="stat-card--square"
             label="Avg Block Time"
             value={`${formatLocaleNumber(overview.avgBlockTimeSec, {
               minimumFractionDigits: 2,
@@ -286,12 +266,14 @@ function TransactionDashboardPage() {
             icon={<ClockIcon />}
           />
           <StatCard
+            className="stat-card--square"
             label="Total Tx"
             value={formatLocaleNumber(overview.totalTransactions)}
             helper="트랜잭션 수"
             icon={<TransferIcon />}
           />
           <StatCard
+            className="stat-card--wide"
             label="Token Amount"
             value={formatTokenAmount(overview.tokenAmount)}
             helper="성공한 기부 이벤트 금액 합계"
@@ -322,23 +304,15 @@ function TransactionDashboardPage() {
       {loading && <div className="panel empty-state">트랜잭션 데이터를 불러오는 중입니다.</div>}
       {error && <div className="panel empty-state">{error}</div>}
 
-      {!loading && !error && !noResultsKeyword && (
+      {!loading && !error && (
         <>
           <TransactionTable transactions={data.items} />
           <Pagination pageInfo={data.pageInfo} onPageChange={setPage} />
         </>
-      )}
-
-      {!loading && !error && noResultsKeyword && (
-        <div className="panel empty-state">
-          <strong>검색 결과 없음</strong>
-          <p className="empty-state__text">
-            `{noResultsKeyword}` 와 일치하는 지갑 주소, 재단명, 캠페인명 또는 트랜잭션 해시를 찾지 못했습니다.
-          </p>
-        </div>
       )}
     </section>
   );
 }
 
 export default TransactionDashboardPage;
+
