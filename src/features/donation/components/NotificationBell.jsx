@@ -40,29 +40,53 @@ export default function NotificationBell({ userRole, dropPosition = "right", onV
   const [recent, setRecent] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [authFailed, setAuthFailed] = useState(false);
   const ref = useRef(null);
   const navigate = useNavigate();
   const token = getToken(userRole);
 
   const fetchNotifications = useCallback(async () => {
-    if (!token) return;
+    if (!token || loading || authFailed) return;
+    setLoading(true);
     try {
       const res = await fetch(
         "/api/notifications?page=0&size=100&sort=created_at,desc",
         { headers: { Authorization: `Bearer ${token}` } }
       );
+      if (res.status === 401) {
+        setAuthFailed(true);
+        setRecent([]);
+        setUnreadCount(0);
+        return;
+      }
       if (res.ok) {
         const data = await res.json();
         const items = data.content ?? [];
         setRecent(items.slice(0, 3));
         setUnreadCount(items.filter((n) => !n.read).length);
       }
-    } catch {}
-  }, [token]);
+    } catch {
+      // ignore transient network errors
+    } finally {
+      setLoading(false);
+      setLoaded(true);
+    }
+  }, [token, loading, authFailed]);
 
   useEffect(() => {
-    fetchNotifications();
-  }, [fetchNotifications]);
+    if (open && !loaded) {
+      fetchNotifications();
+    }
+  }, [open, loaded, fetchNotifications]);
+
+  useEffect(() => {
+    setLoaded(false);
+    setAuthFailed(false);
+    setRecent([]);
+    setUnreadCount(0);
+  }, [token]);
 
   useEffect(() => {
     const handler = (e) => {

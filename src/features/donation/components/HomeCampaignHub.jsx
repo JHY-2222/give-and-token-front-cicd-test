@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   Bell,
@@ -16,6 +16,7 @@ import disabledIcon from "../../../img/category/disabled.svg";
 import animalIcon from "../../../img/category/animal.svg";
 import environmentIcon from "../../../img/category/environment.svg";
 import etcIcon from "../../../img/category/etc.svg";
+import { getDashboardOverview } from "../../blockchain/api/blockchainApi";
 
 const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(
   /\/$/,
@@ -24,6 +25,7 @@ const API_BASE_URL = (import.meta.env.VITE_API_BASE_URL || "").replace(
 const HOME_HUB_CACHE_KEY = "donation-home-hub-cache-v1";
 const HOME_HUB_CACHE_TTL_MS = 60 * 1000;
 const HOME_HUB_POLL_INTERVAL_MS = 15 * 1000;
+const LATEST_CAMPAIGNS_REFRESH_MS = 5 * 60 * 1000;
 const LIVE_FEED_COUNT = 5;
 
 const EMPTY_SUMMARY = {
@@ -381,6 +383,7 @@ function HorizontalCampaignCard({ campaign }) {
 
 export default function HomeCampaignHub() {
   const [summary, setSummary] = useState(EMPTY_SUMMARY);
+  const [isSummaryLoading, setIsSummaryLoading] = useState(true);
   const [endingSoon, setEndingSoon] = useState([]);
   const [topProgress, setTopProgress] = useState([]);
   const [latestCampaigns, setLatestCampaigns] = useState([]);
@@ -390,6 +393,7 @@ export default function HomeCampaignHub() {
   const [feedItems, setFeedItems] = useState([]);
   const [isFeedLoading, setIsFeedLoading] = useState(true);
   const [nowTs, setNowTs] = useState(Date.now());
+  const latestFetchAtRef = useRef(0);
 
   useEffect(() => {
     let ignore = false;
@@ -402,6 +406,11 @@ export default function HomeCampaignHub() {
       setSummary(homeState.summary);
       setEndingSoon(homeState.endingSoon);
       setTopProgress(homeState.topProgress);
+      if (Array.isArray(homeState.latestOngoing) && homeState.latestOngoing.length > 0) {
+        setLatestCampaigns(homeState.latestOngoing);
+        setIsLatestCampaignsLoading(false);
+        latestFetchAtRef.current = Date.now();
+      }
       setCampaigns(homeState.campaigns);
     }
 
@@ -472,95 +481,57 @@ export default function HomeCampaignHub() {
       return toHomeState(payload);
     }
 
-    async function loadAdminSummaryAmount() {
-      const adminAccessToken =
-        window.localStorage.getItem("adminAccessToken") ?? "";
-
-      if (!adminAccessToken) {
+    async function loadPublicTotalDonationAmount() {
+      try {
+        const overview = await getDashboardOverview();
+        const amount = Number(overview?.tokenAmount ?? NaN);
+        if (Number.isFinite(amount)) return amount;
+      } catch {
         return null;
       }
 
+      return null;
+    }
+
+    async function loadLatestCampaigns() {
+      const now = Date.now();
+      if (now - latestFetchAtRef.current < LATEST_CAMPAIGNS_REFRESH_MS) {
+        return;
+      }
+
       try {
-        const response = await fetch("/admin-api/dashboard/summary", {
-          headers: {
-            Authorization: `Bearer ${adminAccessToken}`,
-          },
-        });
+        setIsLatestCampaignsLoading(true);
+        const response = await fetch(
+          `${API_BASE_URL}/api/donation/public/latest-campaigns?limit=5`,
+        );
 
         if (!response.ok) {
-          return null;
+          throw new Error(
+            `latest-campaigns request failed: ${response.status}`,
+          );
         }
 
         const data = await response.json();
-        const amount = Number(data?.totalDonationAmount ?? NaN);
-        return Number.isFinite(amount) ? amount : null;
-      } catch {
-        return null;
-      }
-    }
-
-    async function loadPublicTotalDonationAmount() {
-      try {
-        const summaryResponse = await fetch(
-          `${API_BASE_URL}/api/blockchain/summary?status=SUCCESS`,
-        );
-        if (!summaryResponse.ok) {
-          return null;
-        }
-
-        const summaryData = await summaryResponse.json();
-        const summaryAmount = Number(
-          summaryData?.totalDonationAmount ??
-            summaryData?.donationTokenAmount ??
-            summaryData?.donationAmount ??
-            NaN,
-        );
-        if (Number.isFinite(summaryAmount)) {
-          return summaryAmount;
+        const latestList = toArrayPayload(data).map(toCampaignCard);
+        if (!ignore) {
+          setLatestCampaigns(latestList);
+          latestFetchAtRef.current = Date.now();
         }
       } catch {
-        // ignore and fallback to campaign sum
-      }
-
-      try {
-        const campaignsResponse = await fetch(
-          `${API_BASE_URL}/api/foundation/campaigns?sort=deadline`,
-        );
-        if (!campaignsResponse.ok) {
-          return null;
+        // keep existing list
+      } finally {
+        if (!ignore) {
+          setIsLatestCampaignsLoading(false);
         }
-
-        const campaignList = await campaignsResponse.json();
-        if (!Array.isArray(campaignList)) {
-          return null;
-        }
-
-        const totalFromCampaigns = campaignList.reduce((sum, campaign) => {
-          const amount = Number(campaign?.currentAmount ?? 0);
-          return sum + (Number.isFinite(amount) ? amount : 0);
-        }, 0);
-
-        return totalFromCampaigns;
-      } catch {
-        return null;
       }
     }
 
     async function loadHomeHub() {
-      let timeoutId = null;
-
       try {
         controller = new AbortController();
-        timeoutId = setTimeout(() => controller?.abort(), 1500);
-
-        const response = await fetch(
-          `${API_BASE_URL}/api/donation/public/home-hub`,
-          {
-            signal: controller.signal,
-          },
-        );
-
-        clearTimeout(timeoutId);
+        const response = await fetch(`${API_BASE_URL}/api/donation/public/home-hub`, {
+          signal: controller.signal,
+        });
 
         if (!response.ok) {
           throw new Error(`home-hub request failed: ${response.status}`);
@@ -580,6 +551,7 @@ export default function HomeCampaignHub() {
           if (!ignore) {
             applyHomeState(fallback);
             writeCache({
+              totalDonationAmount: fallback.summary.totalDonationAmount,
               totalDonationCount: fallback.summary.totalDonationCount,
               totalUserCount: fallback.summary.totalUserCount,
               totalCampaignCount: fallback.summary.totalCampaignCount,
@@ -593,38 +565,10 @@ export default function HomeCampaignHub() {
             setSummary(EMPTY_SUMMARY);
             setEndingSoon([]);
             setTopProgress([]);
+            setLatestCampaigns([]);
+            setIsLatestCampaignsLoading(false);
             setCampaigns([]);
           }
-        }
-      } finally {
-        if (timeoutId) {
-          clearTimeout(timeoutId);
-        }
-      }
-    }
-
-    async function loadLatestCampaigns() {
-      try {
-        setIsLatestCampaignsLoading(true);
-        const response = await fetch(
-          `${API_BASE_URL}/api/donation/public/latest-campaigns?limit=5`,
-        );
-
-        if (!response.ok) {
-          throw new Error(
-            `latest-campaigns request failed: ${response.status}`,
-          );
-        }
-
-        const data = await response.json();
-
-        const latestList = toArrayPayload(data).map(toCampaignCard);
-        if (!ignore) setLatestCampaigns(latestList);
-      } catch (error) {
-        console.error("현재 진행중인 캠페인 조회 실패:", error);
-      } finally {
-        if (!ignore) {
-          setIsLatestCampaignsLoading(false);
         }
       }
     }
@@ -670,24 +614,24 @@ export default function HomeCampaignHub() {
 
       isFetching = true;
       try {
-        const [, , , adminSummaryAmount, publicSummaryAmount] = await Promise.all([
+        const [, , publicSummaryAmount] = await Promise.all([
           loadHomeHub(),
           loadRecentFeed(),
-          loadLatestCampaigns(),
-          loadAdminSummaryAmount(),
           loadPublicTotalDonationAmount(),
         ]);
 
-        const resolvedSummaryAmount =
-          Number.isFinite(adminSummaryAmount) ? adminSummaryAmount : publicSummaryAmount;
-
-        if (!ignore && Number.isFinite(resolvedSummaryAmount)) {
+        if (!ignore && Number.isFinite(publicSummaryAmount)) {
           setSummary((prev) => ({
             ...prev,
-            totalDonationAmount: resolvedSummaryAmount,
+            totalDonationAmount: publicSummaryAmount,
           }));
         }
+
+        void loadLatestCampaigns();
       } finally {
+        if (!ignore) {
+          setIsSummaryLoading(false);
+        }
         isFetching = false;
       }
     }
@@ -710,20 +654,13 @@ export default function HomeCampaignHub() {
 
   const totalRaisedAmount = useMemo(() => {
     const summaryAmount = Number(summary?.totalDonationAmount ?? NaN);
-    if (Number.isFinite(summaryAmount)) {
-      return summaryAmount;
-    }
-
-    return campaigns.reduce((sum, item) => {
-      const amount = Number(item?.raised ?? 0);
-      return sum + (Number.isFinite(amount) ? amount : 0);
-    }, 0);
-  }, [campaigns, summary?.totalDonationAmount]);
+    return Number.isFinite(summaryAmount) ? summaryAmount : 0;
+  }, [summary?.totalDonationAmount]);
 
   const shouldShowCheckingAmount = useMemo(() => {
     const summaryAmount = Number(summary?.totalDonationAmount ?? NaN);
-    return !Number.isFinite(summaryAmount);
-  }, [summary?.totalDonationAmount]);
+    return isSummaryLoading && !Number.isFinite(summaryAmount);
+  }, [isSummaryLoading, summary?.totalDonationAmount]);
 
   return (
     <section
