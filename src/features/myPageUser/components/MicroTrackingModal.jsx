@@ -70,7 +70,7 @@ export default function MicroTrackingModal({ isOpen, onClose, trackingData, isLo
                             {/* 1. 정산 기록 (순서 변경: 정산 먼저) */}
                             {settlement && (
                                 <section>
-                                    <h3 className="text-base font-black text-gray-500 mb-3 uppercase tracking-wider">정산 내역</h3>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-4">정산 내역</h3>
                                     <div className="border-2 rounded-xl divide-y overflow-hidden shadow-sm">
                                         <div className="flex justify-between p-4 text-sm bg-gray-50/50">
                                             <span className="text-gray-500 font-medium">정산 일시</span>
@@ -91,10 +91,10 @@ export default function MicroTrackingModal({ isOpen, onClose, trackingData, isLo
                             {/* 2. 최종 보고서 기록 (순서 변경: 보고서 나중) */}
                             {report?.isExist && report.reportData && (
                                 <section>
-                                    <h3 className="text-base font-black text-gray-500 mb-3 uppercase tracking-wider">최종 보고서</h3>
+                                    <h3 className="text-xl font-bold text-gray-900 mb-4">최종 보고서</h3>
                                     <div className="bg-white border-2 border-gray-100 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-shadow">
                                         <div className="p-6">
-                                            <h4 className="font-black text-gray-900 text-lg mb-2 leading-snug">
+                                            <h4 className="font-bold text-gray-900 text-lg mb-2 leading-snug">
                                                 {report.reportData.title}
                                             </h4>
                                             <p className="text-sm text-gray-500 line-clamp-2 leading-relaxed mb-5">
