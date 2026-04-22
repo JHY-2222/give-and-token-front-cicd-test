@@ -1,49 +1,33 @@
-export default function LoginRoleSelector({ role, onChange }) {
+﻿export default function LoginRoleSelector({ role, onChange }) {
+  const roles = [
+    { value: "user", label: "사용자 회원" },
+    { value: "foundation", label: "기업 회원" },
+    { value: "beneficiary", label: "수혜자 회원" }
+  ];
+
   return (
-    <fieldset className="mb-6">
-      <legend className="sr-only">권한 선택</legend>
-      <div className="flex justify-center space-x-4">
-        <label className={`flex items-center space-x-2 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-            role === "user" ? "bg-primary text-white shadow-md" : "text-gray-700 hover:bg-gray-200"
-          }`}>
-          <input
-            type="radio"
-            name="role"
-            value="user"
-            checked={role === "user"}
-            onChange={onChange}
-            className="form-radio h-4 w-4 text-primary transition duration-150 ease-in-out"
-          />
-          <span className="font-medium">사용자</span>
-        </label>
-
-        <label className={`flex items-center space-x-2 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-            role === "foundation" ? "bg-primary text-white shadow-md" : "text-gray-700 hover:bg-gray-200"
-          }`}>
-          <input
-            type="radio"
-            name="role"
-            value="foundation"
-            checked={role === "foundation"}
-            onChange={onChange}
-            className="form-radio h-4 w-4 text-primary transition duration-150 ease-in-out"
-          />
-          <span className="font-medium">기업단체</span>
-        </label>
-
-        <label className={`flex items-center space-x-2 p-3 rounded-lg cursor-pointer transition-all duration-200 ${
-            role === "beneficiary" ? "bg-primary text-white shadow-md" : "text-gray-700 hover:bg-gray-200"
-          }`}>
-          <input
-            type="radio"
-            name="role"
-            value="beneficiary"
-            checked={role === "beneficiary"}
-            onChange={onChange}
-            className="form-radio h-4 w-4 text-primary transition duration-150 ease-in-out"
-          />
-          <span className="font-medium">수혜자</span>
-        </label>
+    <fieldset className="login-role-tabs" role="radiogroup" aria-label="로그인 유형 선택">
+      <legend className="sr-only">로그인 유형 선택</legend>
+      <div className="login-role-tabs__list">
+        {roles.map((item) => {
+          const isActive = role === item.value;
+          return (
+            <label
+              key={item.value}
+              className={`login-role-tabs__item ${isActive ? "is-active" : ""}`}
+            >
+              <input
+                type="radio"
+                name="role"
+                value={item.value}
+                checked={isActive}
+                onChange={onChange}
+                className="login-role-tabs__input"
+              />
+              <span className="login-role-tabs__label">{item.label}</span>
+            </label>
+          );
+        })}
       </div>
     </fieldset>
   );

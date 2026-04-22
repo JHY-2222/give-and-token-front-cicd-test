@@ -67,6 +67,10 @@
     @apply w-full min-w-0;
 }
 
+.beneficiary-layout-shell {
+    @apply lg:gap-10;
+}
+
 @media (min-width: 1024px) {
     :root {
         --mypage-panel-height: 820px;

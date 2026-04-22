@@ -1,23 +1,24 @@
+﻿import "../styles/login.css";
+
 export default function LoginLinks({
   onOpenFindEmail,
   onOpenPasswordReset,
 }) {
   return (
-    <div className="flex items-center justify-between text-sm">
+    <div className="login-inline-links">
       <button
         type="button"
         onClick={onOpenFindEmail}
-        className="font-medium text-primary hover:text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        className="login-inline-link"
       >
-        이메일 찾기
+        아이디 찾기
       </button>
-
       <button
         type="button"
         onClick={onOpenPasswordReset}
-        className="font-medium text-primary hover:text-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+        className="login-inline-link"
       >
-        비밀번호 재설정
+        Forgot Password?
       </button>
     </div>
   );

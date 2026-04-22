@@ -1,7 +1,7 @@
 ﻿import { motion } from "motion/react";
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ChevronLeft, Clock, Download, Heart, MapPin, Share2, Users } from "lucide-react";
+import { ChevronLeft, Clock, Download, Heart, Loader2, MapPin, Share2, Users, X } from "lucide-react";
 import { campaigns, formatWon } from "../data/campaigns";
 import FoundationProfileCard from "../../foundation/components/FoundationProfileCard";
 
@@ -122,6 +122,9 @@ export default function CampaignDetail() {
   const localCampaign = useMemo(() => campaigns.find((item) => item.id === Number(id)), [id]);
   const [campaign, setCampaign] = useState(localCampaign ?? null);
   const [isLoading, setIsLoading] = useState(!localCampaign);
+  const [finalReport, setFinalReport] = useState(null);
+  const [isFinalReportLoading, setIsFinalReportLoading] = useState(false);
+  const [selectedReportImage, setSelectedReportImage] = useState("");
 
   useEffect(() => {
     let ignore = false;
@@ -137,10 +140,11 @@ export default function CampaignDetail() {
     async function loadCampaignDetail() {
       try {
         setIsLoading(true);
-        const response = await fetch(`${API_BASE_URL}/api/foundation/campaigns/${id}/detail`);
-        if (!response.ok) throw new Error(`detail request failed: ${response.status}`);
-        const data = await response.json();
-        if (!ignore) setCampaign(toDetailCampaignModel(data, id));
+        const campaignResponse = await fetch(`${API_BASE_URL}/api/foundation/campaigns/${id}/detail`);
+
+        if (!campaignResponse.ok) throw new Error(`detail request failed: ${campaignResponse.status}`);
+        const campaignData = await campaignResponse.json();
+        if (!ignore) setCampaign(toDetailCampaignModel(campaignData, id));
       } catch {
         if (!ignore) setCampaign(null);
       } finally {
@@ -154,11 +158,43 @@ export default function CampaignDetail() {
     };
   }, [id, localCampaign]);
 
+  useEffect(() => {
+    let ignore = false;
+
+    async function loadFinalReport() {
+      try {
+        setIsFinalReportLoading(true);
+        const response = await fetch(`${API_BASE_URL}/api/v1/final-reports/campaign/${id}`);
+        if (!response.ok) {
+          if (!ignore) setFinalReport(null);
+          return;
+        }
+
+        const data = await response.json();
+        if (!ignore) {
+          const status = String(data?.approvalStatus || "").toUpperCase();
+          setFinalReport(status === "APPROVED" ? data : null);
+        }
+      } catch {
+        if (!ignore) setFinalReport(null);
+      } finally {
+        if (!ignore) setIsFinalReportLoading(false);
+      }
+    }
+
+    loadFinalReport();
+
+    return () => {
+      ignore = true;
+    };
+  }, [id]);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-surface pb-32 pt-52">
-        <div className="mx-auto max-w-4xl px-4 text-center sm:px-6 lg:px-8">
-          <p className="text-lg font-bold text-stone-500">Loading campaign...</p>
+      <div className="min-h-screen bg-surface flex items-center justify-center">
+        <div className="px-4 text-center sm:px-6 lg:px-8">
+          <Loader2 className="mx-auto mb-4 h-12 w-12 animate-spin text-primary" />
+          <p className="text-lg font-bold text-primary">Loading campaign...</p>
         </div>
       </div>
     );
@@ -191,6 +227,15 @@ export default function CampaignDetail() {
   const safeDonors = Number(campaign.donors ?? 0);
   const safeRecentDonors = Array.isArray(campaign.recentDonors) ? campaign.recentDonors : [];
   const safeDocs = Array.isArray(campaign.documents) ? campaign.documents : [];
+  const safeReportImages = Array.isArray(finalReport?.images)
+    ? finalReport.images
+      .map((image) => normalizeImagePath(image?.imgPath || ""))
+      .filter(Boolean)
+    : [];
+
+  const closeReportImageModal = () => {
+    setSelectedReportImage("");
+  };
 
   return (
     <div className="min-h-screen bg-surface pb-32 pt-36">
@@ -247,7 +292,7 @@ export default function CampaignDetail() {
                   {tab === "about" && "소개"}
                   {tab === "contributors" && "기부자 명단"}
                   {tab === "beneficiary" && "수혜자"}
-                  {tab === "proof" && "활동 증빙"}
+                  {tab === "proof" && "활동 보고서"}
                   {activeTab === tab && <motion.div layoutId="activeTab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />}
                 </button>
               ))}
@@ -289,6 +334,31 @@ export default function CampaignDetail() {
                     </div>
                   </div>
 
+                  <div>
+                    <h3 className="mb-4 text-2xl font-display font-bold text-ink">활동 증빙 서류</h3>
+                    {safeDocs.length > 0 ? (
+                      <div className="grid gap-4 sm:grid-cols-2">
+                        {safeDocs.map((doc, index) => (
+                          <div key={`${doc.name}-${index}`} className="group flex items-center justify-between rounded-3xl border border-line bg-white p-6 transition-colors hover:border-primary/30">
+                            <div className="flex items-center gap-4">
+                              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-50 text-stone-400 transition-colors group-hover:text-primary">
+                                <FileText size={24} />
+                              </div>
+                              <div>
+                                <div className="font-bold text-ink">{doc.name}</div>
+                                <div className="text-xs text-stone-400">{doc.size}</div>
+                              </div>
+                            </div>
+                            <a href={doc.href} download={doc.name} className="p-2 text-stone-400 transition-colors hover:text-primary">
+                              <Download size={20} />
+                            </a>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-stone-500">등록된 활동 증빙 서류가 없습니다.</p>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -372,28 +442,51 @@ export default function CampaignDetail() {
                   </div>
 
                   <div>
-                    <h3 className="mb-4 text-2xl font-display font-bold text-ink">활동 증빙 서류</h3>
-                    {safeDocs.length > 0 ? (
-                      <div className="grid gap-4 sm:grid-cols-2">
-                        {safeDocs.map((doc, index) => (
-                          <div key={`${doc.name}-${index}`} className="group flex items-center justify-between rounded-3xl border border-line bg-white p-6 transition-colors hover:border-primary/30">
-                            <div className="flex items-center gap-4">
-                              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-stone-50 text-stone-400 transition-colors group-hover:text-primary">
-                                <FileText size={24} />
-                              </div>
-                              <div>
-                                <div className="font-bold text-ink">{doc.name}</div>
-                                <div className="text-xs text-stone-400">{doc.size}</div>
-                              </div>
+                    <h3 className="mb-4 text-2xl font-display font-bold text-ink">수혜자 활동 보고서</h3>
+                    {isFinalReportLoading ? (
+                      <p className="text-sm text-stone-500">활동 보고서를 불러오는 중입니다.</p>
+                    ) : finalReport ? (
+                      <div className="space-y-5 rounded-3xl border border-line bg-white p-6 shadow-sm">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-widest text-stone-400">
+                            작성일 {formatDate(finalReport?.createdAt)}
+                          </p>
+                          <h4 className="mt-2 text-2xl font-display font-bold text-ink">
+                            {finalReport?.title || "활동 보고서"}
+                          </h4>
+                          {finalReport?.usagePurpose ? (
+                            <div className="mt-3 rounded-2xl bg-stone-50 px-4 py-3 text-sm text-stone-500">
+                              <span className="font-bold text-stone-600">사용 목적: </span>
+                              {finalReport.usagePurpose}
                             </div>
-                            <a href={doc.href} download={doc.name} className="p-2 text-stone-400 transition-colors hover:text-primary">
-                              <Download size={20} />
-                            </a>
+                          ) : null}
+                        </div>
+                        <p className="whitespace-pre-line text-base leading-relaxed text-stone-600">
+                          {finalReport?.content || "보고서 내용이 없습니다."}
+                        </p>
+
+                        {safeReportImages.length > 0 ? (
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            {safeReportImages.map((img, index) => (
+                              <button
+                                type="button"
+                                key={`${img}-${index}`}
+                                onClick={() => setSelectedReportImage(img)}
+                                className="overflow-hidden rounded-2xl border border-line bg-white text-left"
+                              >
+                                <img
+                                  src={img}
+                                  alt={`${finalReport?.title || "활동 보고서"} 이미지 ${index + 1}`}
+                                  className="h-52 w-full cursor-zoom-in object-cover"
+                                  referrerPolicy="no-referrer"
+                                />
+                              </button>
+                            ))}
                           </div>
-                        ))}
+                        ) : null}
                       </div>
                     ) : (
-                      <p className="text-sm text-stone-500">등록된 활동 증빙 서류가 없습니다.</p>
+                      <p className="text-sm text-stone-500">등록된 활동 보고서가 없습니다.</p>
                     )}
                   </div>
                 </div>
@@ -484,6 +577,32 @@ export default function CampaignDetail() {
           </div>
         </div>
       </div>
+
+      {selectedReportImage ? (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 px-4"
+          onClick={closeReportImageModal}
+          role="dialog"
+          aria-modal="true"
+          aria-label="활동보고서 이미지 크게 보기"
+        >
+          <button
+            type="button"
+            onClick={closeReportImageModal}
+            className="absolute right-6 top-6 rounded-full bg-white/20 p-2 text-white transition hover:bg-white/30"
+            aria-label="닫기"
+          >
+            <X size={22} />
+          </button>
+          <img
+            src={selectedReportImage}
+            alt="활동보고서 확대 이미지"
+            className="max-h-[85vh] max-w-[92vw] rounded-2xl bg-white object-contain"
+            onClick={(event) => event.stopPropagation()}
+            referrerPolicy="no-referrer"
+          />
+        </div>
+      ) : null}
     </div>
   );
 }

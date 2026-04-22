@@ -1,4 +1,4 @@
-function Pagination({ pageInfo, onPageChange }) {
+﻿function Pagination({ pageInfo, onPageChange }) {
   const { page, totalPages } = pageInfo;
   const MAX_VISIBLE_PAGES = 10;
 
@@ -54,3 +54,4 @@ function Pagination({ pageInfo, onPageChange }) {
 }
 
 export default Pagination;
+
