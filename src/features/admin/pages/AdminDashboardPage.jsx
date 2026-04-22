@@ -1080,12 +1080,16 @@ function ReportsPanel({ onOpenDetail }) {
     { key: "usagePurpose", label: "사용 목적" },
     { key: "approvalStatus", label: "상태", width: "80px", render: (r) => <StatusBadge text={r.approvalStatus === "PENDING" ? "검토중" : r.approvalStatus} /> },
     { key: "createdAt", label: "제출일", width: "130px", render: (r) => formatDate(r.createdAt) },
-    { key: "_action", label: "관리", width: "120px", render: (r) => (
+    { key: "_action", label: "관리", width: "160px", render: (r) => (
       <div style={{ display: "flex", gap: "4px", flexWrap: "nowrap" }}>
         <button type="button" className="admin-row-btn" style={{ color: "#FF8A65", borderColor: "#FF8A65" }}
           onClick={(e) => { e.stopPropagation(); handleApprove(r.reportNo); }}>승인</button>
         <button type="button" className="admin-row-btn" style={{ color: "#dc2626", borderColor: "#fca5a5" }}
           onClick={(e) => { e.stopPropagation(); setRejectTarget(r); }}>반려</button>
+        {onOpenDetail && (
+          <button type="button" className="admin-row-btn"
+            onClick={(e) => { e.stopPropagation(); onOpenDetail(r); }}>상세</button>
+        )}
       </div>
     )},
   ];
