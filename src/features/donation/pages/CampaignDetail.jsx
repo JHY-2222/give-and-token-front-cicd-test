@@ -36,6 +36,13 @@ function normalizeImagePath(imagePath) {
   return rawPath.startsWith("/") ? `${API_BASE_URL}${rawPath}` : `${API_BASE_URL}/${rawPath}`;
 }
 
+function toTimestamp(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.getTime();
+}
+
 function toDetailCampaignModel(data, id) {
   const representativeImage = normalizeImagePath(data?.representativeImagePath || "");
   const detailImages = Array.isArray(data?.detailImagePaths)
@@ -55,7 +62,8 @@ function toDetailCampaignModel(data, id) {
     title: data?.title || "",
     shortTitle: data?.title || "",
     category: data?.category || "기타",
-    daysLeft: Number.isFinite(Number(data?.daysLeft)) ? Number(data.daysLeft) : 0,
+    daysLeft: Number.isFinite(Number(data?.daysLeft)) ? Number(data.daysLeft) : null,
+    campaignStatus: data?.campaignStatus || data?.status || "",
     donors: Number.isFinite(Number(data?.donors)) ? Number(data.donors) : 0,
     raised,
     goal,
@@ -243,6 +251,21 @@ export default function CampaignDetail() {
   const safeDonors = Number(campaign.donors ?? 0);
   const safeRecentDonors = Array.isArray(campaign.recentDonors) ? campaign.recentDonors : [];
   const safeDocs = Array.isArray(campaign.documents) ? campaign.documents : [];
+  const isLoggedIn =
+    typeof window !== "undefined" &&
+    Boolean(window.localStorage.getItem("accessToken"));
+  const numericDaysLeft = Number(campaign.daysLeft);
+  const endAtTimestamp = toTimestamp(campaign.recruitEndDate);
+  const campaignStatus = String(campaign.campaignStatus || "").toUpperCase();
+  const isClosedByStatus = ["COMPLETED", "ENDED", "CLOSED", "FINISHED", "EXPIRED", "REJECTED"].includes(campaignStatus);
+  const isClosedCampaign =
+    isClosedByStatus ||
+    (Number.isFinite(endAtTimestamp) && endAtTimestamp < Date.now());
+  const daysLeftLabel = isClosedCampaign
+    ? "마감"
+    : Number.isFinite(numericDaysLeft)
+      ? `${Math.max(0, numericDaysLeft)}일 남음`
+      : "진행중";
   const safeReportImages = Array.isArray(finalReport?.images)
     ? finalReport.images
       .map((image) => normalizeImagePath(image?.imgPath || ""))
@@ -274,7 +297,7 @@ export default function CampaignDetail() {
               <div className="flex flex-wrap gap-6 text-sm font-medium text-stone-400">
                 <div className="flex items-center gap-2">
                   <Clock size={18} />
-                  {campaign.daysLeft}일 남음
+                  {daysLeftLabel}
                 </div>
                 <div className="flex items-center gap-2">
                   <Users size={18} />
@@ -285,12 +308,22 @@ export default function CampaignDetail() {
 
             <div className="mb-12 grid grid-cols-4 gap-4">
               <div className="col-span-4 aspect-[16/10] overflow-hidden rounded-[1rem] shadow-md md:col-span-3">
-                <img src={safeImages[0]} alt={campaign.title} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                <img
+                  src={safeImages[0]}
+                  alt={campaign.title}
+                  className={`h-full w-full object-cover ${isClosedCampaign ? "grayscale" : ""}`}
+                  referrerPolicy="no-referrer"
+                />
               </div>
               <div className="hidden flex-col gap-4 md:flex">
                 {safeImages.slice(1, 4).map((img, idx) => (
                   <div key={idx} className="flex-1 overflow-hidden rounded-[1rem] shadow-md">
-                    <img src={img} alt={`${campaign.shortTitle} 이미지 ${idx + 2}`} className="h-full w-full object-cover" referrerPolicy="no-referrer" />
+                    <img
+                      src={img}
+                      alt={`${campaign.shortTitle} 이미지 ${idx + 2}`}
+                      className={`h-full w-full object-cover ${isClosedCampaign ? "grayscale" : ""}`}
+                      referrerPolicy="no-referrer"
+                    />
                   </div>
                 ))}
               </div>
@@ -523,7 +556,7 @@ export default function CampaignDetail() {
                   </div>
                   <div className="flex justify-between text-sm font-bold">
                     <span className="text-primary">{campaign.progress}% 달성</span>
-                    <span className="text-ink">{campaign.daysLeft}일 남음</span>
+                    <span className="text-ink">{daysLeftLabel}</span>
                   </div>
                 </div>
 
@@ -539,9 +572,26 @@ export default function CampaignDetail() {
                   </div>
                 </div>
 
-                <Link to={`/campaign/${campaign.id}/donate`} className="mb-4 flex w-full items-center justify-center rounded-full bg-primary py-4 text-base font-bold text-white shadow-m shadow-primary/20 transition-all hover:bg-primary/90">
-                  지금 기부하기
-                </Link>
+                {isClosedCampaign ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="mb-4 flex w-full cursor-not-allowed items-center justify-center rounded-full bg-stone-300 py-4 text-base font-bold text-white"
+                  >
+                    마감되었습니다
+                  </button>
+                ) : !isLoggedIn ? (
+                  <Link
+                    to={`/login?next=${encodeURIComponent(`/campaign/${campaign.id}`)}`}
+                    className="mb-4 flex w-full items-center justify-center rounded-full bg-stone-700 py-4 text-base font-bold text-white transition-all hover:bg-stone-800"
+                  >
+                    로그인 후 기부하기
+                  </Link>
+                ) : (
+                  <Link to={`/campaign/${campaign.id}/donate`} className="mb-4 flex w-full items-center justify-center rounded-full bg-primary py-4 text-base font-bold text-white shadow-m shadow-primary/20 transition-all hover:bg-primary/90">
+                    지금 기부하기
+                  </Link>
+                )}
                 <button type="button" onClick={handleShare} className="flex w-full items-center justify-center gap-2 rounded-full border border-line py-4 text-base font-bold text-stone-500 transition-all hover:bg-stone-50">
                   <Share2 size={20} />
                   공유하기
