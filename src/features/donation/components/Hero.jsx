@@ -73,7 +73,7 @@ export default function Hero() {
               아이들의 <span className="text-primary italic">꿈이</span>
               <br />
               <span className="relative inline-block">
-                피어날 수 있게
+                피어날 수 있게!!!
                 <svg className="absolute -bottom-4 left-0 w-full" viewBox="0 0 300 20" fill="none">
                   <path d="M5 15C50 5 150 5 295 15" stroke="#FF8A65" strokeWidth="8" strokeLinecap="round" />
                 </svg>
